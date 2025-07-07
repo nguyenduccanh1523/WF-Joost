@@ -1,0 +1,377 @@
+{
+  "name": "Generate Prompt..",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "f46c9bff-1ea6-4a85-a7ef-c7b7c626ba58",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  \"email\": \"user@example.com\",\n  \"photo_url\": \"https://example.com/photo.jpg\",\n  \"clothing_desc\": \"futuristic soldier outfit with armor and blue accents\",\n  \"notes\": \"make it look heroic and dynamic\"\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "e95866c7-b15f-428c-8c2e-ce4a606b3a10",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "functionCode": "const email = $json[\"email\"];\nconst photoUrl = $json[\"photo_url\"];\nconst clothingDesc = $json[\"clothing_desc\"];\nconst notes = $json[\"notes\"];\n\nconst prompt = `Create a high-quality 3D-rendered collectible action figure based on the portrait photo at ${photoUrl}. \nThe character should be wearing: ${clothingDesc}. \nSpecial notes for the pose or expression: ${notes}. \nEnsure the figure has a heroic, collectible-style pose, similar to movie-style figurines. Render in full color and studio lighting.`;\n\n\nreturn [\n  {\n    json: {\n      prompt: prompt,\n      email: email\n    }\n  }\n];"
+      },
+      "name": "Generate Prompt (Function)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ],
+      "id": "1488c9bb-55da-4a11-b0aa-b71fc5086e3f"
+    },
+    {
+      "parameters": {
+        "content": "## Generate Prompt",
+        "height": 360,
+        "width": 440
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        180,
+        -140
+      ],
+      "typeVersion": 1,
+      "id": "525e1976-f2bd-46cc-a664-1cab23f5cde2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        580,
+        -440
+      ],
+      "id": "1b72ac1e-faa3-49c6-b41c-b8cac08aec45",
+      "name": "When chat message received",
+      "webhookId": "ac8bdf7a-04a3-4ecb-a492-579d53fe978e"
+    },
+    {
+      "parameters": {
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        800,
+        -460
+      ],
+      "id": "fa60431d-a11c-4b7e-8b8d-4a63794c6057",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        920,
+        -300
+      ],
+      "id": "e2d1964c-004d-4df3-b31f-9e6b482f05bd",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "={{ $json.prompt }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        700,
+        0
+      ],
+      "id": "c2f55834-859c-43b2-a0a2-78868c0f1d33",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "2oY3nw4V0Uspsrzp",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "=[\n  {\n    \"name\": \"Fake-Auth\",\n    \"value\": \"REMOVE_THIS_BEFORE_DEPLOY\"\n  },\n  {\n    \"name\": \"Content-Type\",\n    \"value\": \"application/json\"\n  }\n]",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"dall-e-3\",\n  \"prompt\": \"{{$json['prompt']}}\",\n  \"n\": 1,\n  \"size\": \"1024x1024\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        -320
+      ],
+      "id": "e17ed2ff-ccf4-4a2a-8507-32bf755897d3",
+      "name": "HTTP OpenAI generate"
+    },
+    {
+      "parameters": {
+        "functionCode": "const imageUrl = $json[\"data\"][0][\"url\"];\nconst email = $node[\"Generate Prompt\"].json[\"email\"];\n\nreturn [\n  {\n    json: {\n      image_url: imageUrl,\n      email: email\n    }\n  }\n];"
+      },
+      "name": "Generate Prompt (Function)1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        0
+      ],
+      "id": "915195cb-e9a1-4c62-81be-bac72dcd80e3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1880,
+        0
+      ],
+      "id": "65b9a671-9d2a-4409-946e-2db0e3d7420e",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://file.io",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file",
+              "value": "={{$binary.file}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1260,
+        -260
+      ],
+      "id": "310a868c-5aeb-4008-8f27-c16f2cdb9ae5",
+      "name": "HTTP File.io"
+    },
+    {
+      "parameters": {
+        "path": "=/Action-Figures/{{ $json[\"filename\"] }}",
+        "binaryData": true
+      },
+      "type": "n8n-nodes-base.dropbox",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        0
+      ],
+      "id": "30e0a8f2-ed1e-48db-bf27-1199f2e3deea",
+      "name": "Dropbox",
+      "credentials": {
+        "dropboxApi": {
+          "id": "jvckrdLCbXuSncAY",
+          "name": "Dropbox Joost"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "return [\n  {\n    json: {\n      filename: `output_${new Date().toISOString().replace(/[-:.TZ]/g, \"\")}.png`\n    },\n    binary: items[0].binary\n  }\n];"
+      },
+      "name": "Set file for Dropbox (Function)2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        920,
+        0
+      ],
+      "id": "a9468d94-0be4-45d5-9302-164b800efa8c"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Content-Type\": \"application/json\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"path\": \"{{ $json[\"path_display\"] }}\",\n  \"settings\": {\n    \"requested_visibility\": \"public\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        0
+      ],
+      "id": "5ea018f3-c9d8-495f-9cf9-91cdf9e2bb77",
+      "name": "Get Link",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "iErP8eE0V4l4OiRM",
+          "name": "Bearer Auth Joost Dropbox"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Generate Prompt (Function)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Prompt (Function)": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP OpenAI generate": {
+      "main": [
+        []
+      ]
+    },
+    "Generate Prompt (Function)1": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Set file for Dropbox (Function)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP File.io": {
+      "main": [
+        []
+      ]
+    },
+    "Set file for Dropbox (Function)2": {
+      "main": [
+        [
+          {
+            "node": "Dropbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dropbox": {
+      "main": [
+        [
+          {
+            "node": "Get Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "688e17d2-a6c3-421c-aec1-5501968e367f",
+  "meta": {
+    "instanceId": "6e54678a53d7f49248c5f099ed5a913abc90c7037941e56ed5af77444c54e2c4"
+  },
+  "id": "7XduKOeFspacwUIO",
+  "tags": []
+}
