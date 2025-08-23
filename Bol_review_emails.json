@@ -1,0 +1,1244 @@
+{
+  "name": "Bol review emails",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1rofCIR1q0JgyVyCx4LB_IK_orFsbphqAb33WReFIZDU",
+          "mode": "list",
+          "cachedResultName": "Bol.com Email Tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rofCIR1q0JgyVyCx4LB_IK_orFsbphqAb33WReFIZDU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "EmailTracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rofCIR1q0JgyVyCx4LB_IK_orFsbphqAb33WReFIZDU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "done",
+            "uniqueKey": "={{ $('Get Order Info That Has\\'t Been Emailed').item.json.uniqueKey }}",
+            "sentAt": "={{ $now.setZone('Europe/Berlin').toISO() }}",
+            "customerEmail": "={{ $('Code Formart HTML to send Email').item.json.to }}"
+          },
+          "matchingColumns": [
+            "uniqueKey"
+          ],
+          "schema": [
+            {
+              "id": "uniqueKey",
+              "displayName": "uniqueKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "orderId",
+              "displayName": "orderId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "shipmentId",
+              "displayName": "shipmentId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "shipmentDateTime",
+              "displayName": "shipmentDateTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "processedAt",
+              "displayName": "processedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "customerEmail",
+              "displayName": "customerEmail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sentAt",
+              "displayName": "sentAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "8adccee8-d62d-46f3-b893-92a6cb08b4af",
+      "name": "Mark as Completed",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        80,
+        680
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SxUgxWQTbtlDIDK8",
+          "name": "Google Sheets account Hai.retail.online"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.FileUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "attachment"
+            }
+          }
+        }
+      },
+      "id": "fa78bcb8-1272-49ee-9f9e-8bb8c31ffe99",
+      "name": "Download PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -500,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://v2.api2pdf.com/chrome/pdf/html",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "9e3218f1-8b01-444a-9973-b120f67a0610"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "html",
+              "value": "={{ $json.html }}"
+            },
+            {
+              "name": "filename",
+              "value": "={{ $json.invoiceNumber }}.pdf"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f2e6f79a-5844-433f-9d0c-5c71e4626ac3",
+      "name": "Create PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -700,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "/*\n  Premium Invoice Template - Professional Design\n  AANGEPAST voor \"Run Once for Each Item\" mode\n*/\n\nconst DEFAULT_VAT = 0.21;\nfunction num(n, dec = 2) { \n  return Number(n || 0).toFixed(dec); \n}\nfunction formatCurrency(amount) {\n  return new Intl.NumberFormat('nl-NL', { \n    style: 'currency', \n    currency: 'EUR' \n  }).format(amount);\n}\n\nconst orderData = $json;\nconsole.log(`Processing invoice for order:`, orderData.orderId);\n\nconst date = new Date().toLocaleDateString('nl-NL', {\n  year: 'numeric',\n  month: 'long', \n  day: 'numeric'\n});\n\nconst klant = orderData.billingDetails ?? {};\nconst naam = `${klant.firstName ?? ''} ${klant.surname ?? ''}`.trim() || 'Gewaardeerde klant';\nconst adres = `${klant.streetName ?? ''} ${klant.houseNumber ?? ''} ${klant.houseNumberExtension ?? ''}`.trim();\nconst postcodeCity = `${klant.zipCode ?? ''} ${klant.city ?? ''}`.trim();\nconst email = klant.email ?? 'Niet opgegeven';\nconst orderRef = orderData.orderReference ?? orderData.orderId ?? '–';\nconst factuurnummer = `F-${Date.now().toString().slice(-6)}`;\n\n// Correcte verwijzing naar orderItems\nconst orderLines = orderData.orderItems?.orderItems ?? orderData.orderItems ?? [];\n\nif (orderLines.length === 0) {\n  throw new Error('Geen order items gevonden in de order data');\n}\n\nlet rows = '', exTotal = 0, vatTotal = 0, grandTotal = 0;\n\nfor (const d of orderLines) {\n  const qty = Number(d.quantity ?? 1);\n  const vatRate = Number(d.vatRate ?? DEFAULT_VAT);\n  const priceInc = Number(d.unitPrice ?? d.priceInc ?? d.price ?? 0);\n  \n  if (priceInc <= 0) {\n    console.warn(`Geen geldige prijs gevonden voor product ${d.ean}`);\n    continue;\n  }\n  \n  const priceEx = priceInc / (1 + vatRate);\n  const lineEx = priceEx * qty;\n  const lineVat = (priceInc - priceEx) * qty;\n  const lineTotal = priceInc * qty;\n\n  exTotal += lineEx;\n  vatTotal += lineVat;\n  grandTotal += lineTotal;\n\n  rows += `\n    <tr>\n      <td>${d.ean || '–'}</td>\n      <td>${d.title || d.product?.title || 'Product'}</td>\n      <td class=\"center\">${qty}</td>\n      <td class=\"right\">${formatCurrency(priceEx)}</td>\n      <td class=\"center\">${num(vatRate * 100, 0)}%</td>\n      <td class=\"right\">${formatCurrency(lineTotal)}</td>\n    </tr>`;\n}\n\nconst html = `\n<!DOCTYPE html>\n<html lang=\"nl\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Factuur ${factuurnummer}</title>\n  <style>\n    @page {\n      size: A4;\n      margin: 20mm;\n    }\n    \n    body {\n      font-family: Arial, sans-serif;\n      color: #333;\n      line-height: 1.4;\n      margin: 0;\n      padding: 0;\n      font-size: 12pt;\n    }\n    \n    .header {\n      display: flex;\n      justify-content: space-between;\n      align-items: flex-start;\n      margin-bottom: 30px;\n      padding-bottom: 15px;\n      border-bottom: 1px solid #ddd;\n    }\n    \n    .header h1 {\n      font-size: 24pt;\n      font-weight: bold;\n      color: #333;\n      margin: 0;\n    }\n    \n    .invoice-details {\n      text-align: right;\n      font-size: 11pt;\n    }\n    \n    .invoice-details div {\n      margin-bottom: 5px;\n    }\n    \n    .customer-info {\n      margin-bottom: 25px;\n    }\n    \n    .customer-info h3 {\n      margin: 0 0 10px 0;\n      font-size: 14pt;\n      font-weight: bold;\n    }\n    \n    .customer-details {\n      font-size: 11pt;\n      line-height: 1.5;\n    }\n    \n    .items-table {\n      width: 100%;\n      border-collapse: collapse;\n      margin-bottom: 20px;\n    }\n    \n    .items-table th,\n    .items-table td {\n      border: 1px solid #ddd;\n      padding: 8px;\n      text-align: left;\n      font-size: 10pt;\n    }\n    \n    .items-table th {\n      background-color: #f5f5f5;\n      font-weight: bold;\n    }\n    \n    .items-table .center {\n      text-align: center;\n    }\n    \n    .items-table .right {\n      text-align: right;\n    }\n    \n    .totals-table {\n      margin-left: auto;\n      border-collapse: collapse;\n      margin-top: 10px;\n    }\n    \n    .totals-table td {\n      padding: 5px 15px;\n      border: none;\n      font-size: 11pt;\n    }\n    \n    .totals-table .label {\n      font-weight: bold;\n      text-align: left;\n    }\n    \n    .totals-table .amount {\n      text-align: right;\n      min-width: 80px;\n    }\n    \n    .grand-total {\n      font-weight: bold;\n      border-top: 2px solid #333;\n      margin-top: 5px;\n    }\n    \n    .footer {\n      margin-top: 30px;\n      font-size: 10pt;\n      color: #666;\n      text-align: center;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"header\">\n    <h1>FACTUUR</h1>\n    <div class=\"invoice-details\">\n      <div><strong>Factuurnummer:</strong> ${factuurnummer}</div>\n      <div><strong>Factuurdatum:</strong> ${date}</div>\n      <div><strong>Ordernummer:</strong> ${orderRef}</div>\n    </div>\n  </div>\n  \n  <div class=\"customer-info\">\n    <h3>Factuuradres</h3>\n    <div class=\"customer-details\">\n      ${naam}<br>\n      ${email !== 'Niet opgegeven' ? `${email}<br>` : ''}\n      ${adres ? `${adres}<br>` : ''}\n      ${postcodeCity ? `${postcodeCity}<br>` : ''}\n      ${klant.countryCode ? `${klant.countryCode}` : ''}\n    </div>\n  </div>\n  \n  <table class=\"items-table\">\n    <thead>\n      <tr>\n        <th style=\"width: 15%;\">Artikelcode</th>\n        <th style=\"width: 45%;\">Omschrijving</th>\n        <th class=\"center\" style=\"width: 8%;\">Aantal</th>\n        <th class=\"right\" style=\"width: 12%;\">Prijs ex.</th>\n        <th class=\"center\" style=\"width: 8%;\">BTW</th>\n        <th class=\"right\" style=\"width: 12%;\">Totaal</th>\n      </tr>\n    </thead>\n    <tbody>\n      ${rows}\n    </tbody>\n  </table>\n  \n  <table class=\"totals-table\">\n    <tr>\n      <td class=\"label\">Subtotaal (excl. BTW):</td>\n      <td class=\"amount\">${formatCurrency(exTotal)}</td>\n    </tr>\n    <tr>\n      <td class=\"label\">BTW (${num(DEFAULT_VAT * 100, 0)}%):</td>\n      <td class=\"amount\">${formatCurrency(vatTotal)}</td>\n    </tr>\n    <tr class=\"grand-total\">\n      <td class=\"label\">TOTAAL (incl. BTW):</td>\n      <td class=\"amount\">${formatCurrency(grandTotal)}</td>\n    </tr>\n  </table>\n  \n  <div class=\"footer\">\n    <p>Betaling via Bol.com - Deze factuur is automatisch gegenereerd</p>\n  </div>\n</body>\n</html>\n`;\n\n// Return ENKEL object voor \"Run Once for Each Item\" mode\nreturn { \n  json: { \n    html,\n    orderReference: orderRef,\n    invoiceNumber: factuurnummer,\n    grandTotal: grandTotal\n  }\n};"
+      },
+      "id": "e8d380f7-bd32-4063-83c1-21fa53f59287",
+      "name": "Generate Invoice",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        80,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bol.com/retailer/orders/{{ $json.orderId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.retailer.v10+json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a5ac5143-3f68-462d-a871-c51b230f2322",
+      "name": "Get Order Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -700,
+        480
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "49rFFf6lSKqTs7d4",
+          "name": "bol.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1rofCIR1q0JgyVyCx4LB_IK_orFsbphqAb33WReFIZDU",
+          "mode": "list",
+          "cachedResultName": "Bol.com Email Tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rofCIR1q0JgyVyCx4LB_IK_orFsbphqAb33WReFIZDU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "EmailTracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rofCIR1q0JgyVyCx4LB_IK_orFsbphqAb33WReFIZDU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "uniqueKey": "={{ $('Loop Over Items').item.json.order.orderId }}_{{ $('Loop Over Items').item.json.shipmentId }}",
+            "orderId": "={{ $('Loop Over Items').item.json.order.orderId }}",
+            "processedAt": "={{ $now.setZone('Europe/Berlin').toISO() }}",
+            "shipmentDateTime": "={{ $('Loop Over Items').item.json.shipmentDateTime }}"
+          },
+          "matchingColumns": [
+            "uniqueKey"
+          ],
+          "schema": [
+            {
+              "id": "uniqueKey",
+              "displayName": "uniqueKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "orderId",
+              "displayName": "orderId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "shipmentId",
+              "displayName": "shipmentId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "shipmentDateTime",
+              "displayName": "shipmentDateTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "processedAt",
+              "displayName": "processedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customerEmail",
+              "displayName": "customerEmail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sentAt",
+              "displayName": "sentAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3318b22b-3562-4396-a632-ef84f2adf4f4",
+      "name": "Add to Spreadsheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        200,
+        -140
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SxUgxWQTbtlDIDK8",
+          "name": "Google Sheets account Hai.retail.online"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rofCIR1q0JgyVyCx4LB_IK_orFsbphqAb33WReFIZDU",
+          "mode": "list",
+          "cachedResultName": "Bol.com Email Tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rofCIR1q0JgyVyCx4LB_IK_orFsbphqAb33WReFIZDU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "EmailTracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rofCIR1q0JgyVyCx4LB_IK_orFsbphqAb33WReFIZDU/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "uniqueKey",
+              "lookupValue": "={{ $json.order.orderId }}_{{ $json.shipmentId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "90cc89da-68a7-498c-9fdc-e5cf77ab9f67",
+      "name": "Check Spreadsheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -280,
+        -120
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SxUgxWQTbtlDIDK8",
+          "name": "Google Sheets account Hai.retail.online"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.bol.com/retailer/shipments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.retailer.v10+json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "27e74bae-8fc9-41fb-a268-d4cf2c92e7b3",
+      "name": "Get Shipments",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1440,
+        -140
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "49rFFf6lSKqTs7d4",
+          "name": "bol.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Generate Review URL - voor \"Run Once for Each Item\" mode\nconst orderData = $json;\n\n// Haal de BPID op uit de order data\nconst bolProductId = orderData.bolProductId || orderData.bpid || orderData.ean;\nconsole.log('Using bolProductId:', bolProductId);\n\n// Haal product info op\nconst orderItems = orderData.orderItems?.orderItems || orderData.orderItems || [];\nconst firstItem = orderItems[0] || {};\nconst productName = firstItem.product?.title || firstItem.title || 'product';\n\n// Verbeterde slug generator\nconst slug = productName\n  .toLowerCase()\n  .replace(/[^a-z0-9\\s-]/g, '') // Verwijder speciale tekens\n  .replace(/\\s+/g, '-')         // Spaties naar streepjes\n  .replace(/-+/g, '-')          // Multiple streepjes naar één\n  .replace(/^-+|-+$/g, '')      // Streepjes aan begin/eind weg\n  .trim();\n\n\n// Genereer review URL\nconst reviewUrl = `https://www.bol.com/nl/nl/p/${slug}/${bolProductId}/?mode=reviewStart`;\n\n// Return ENKEL object voor \"Run Once for Each Item\" mode\nreturn {\n  json: {\n    ...orderData,\n    reviewUrl: reviewUrl,\n    slug: slug,\n    productName: productName\n  }\n};"
+      },
+      "id": "ea4b2c0a-39ea-4760-8907-0b359f7c36fa",
+      "name": "Generate Review URL",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bol.com/retailer/products/{{ $json.orderItems[0].product.ean }}/product-ids",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.retailer.v10+json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "0a99cca6-4af5-469f-8a7e-2b9d89f227e7",
+      "name": "Get Product Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -500,
+        480
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "49rFFf6lSKqTs7d4",
+          "name": "bol.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -720,
+        -160
+      ],
+      "id": "f9f13608-0813-4f87-9cca-67ce0dfaaf25",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1800,
+        360
+      ],
+      "id": "3dd57a2a-25d7-47aa-b628-edaa5b2ab78c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "shipments",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1220,
+        -140
+      ],
+      "id": "c9887472-4751-4cf2-b9a1-47ea2f42dcca",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aeadb7dc-c601-4f23-a9e4-d3025354e040",
+              "leftValue": "={{ $json.uniqueKey }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -60,
+        -120
+      ],
+      "id": "e98336d2-f9cf-4a39-a64f-90ba0a588448",
+      "name": "Check Previously Tracked Orders"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f9826e81-e892-49d2-bcf5-84950f5faf8d",
+              "leftValue": "={{ $json.order.orderPlacedDateTime.toDateTime().setZone('Europe/Berlin') }}",
+              "rightValue": "={{ $now.setZone('Europe/Berlin').startOf('day').minus(1, 'day').toISO() }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "afterOrEquals"
+              }
+            },
+            {
+              "id": "55954322-6f35-4d71-8176-0adb901bba81",
+              "leftValue": "={{ $json.order.orderPlacedDateTime.toDateTime().setZone('Europe/Berlin') }}",
+              "rightValue": "={{ $now.setZone('Europe/Berlin').endOf('day').toISO() }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "beforeOrEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1000,
+        -140
+      ],
+      "id": "8a6f3cf1-33cf-414b-bb5c-30b29153810a",
+      "name": "Check Time Order Created"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rofCIR1q0JgyVyCx4LB_IK_orFsbphqAb33WReFIZDU",
+          "mode": "list",
+          "cachedResultName": "Bol.com Email Tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rofCIR1q0JgyVyCx4LB_IK_orFsbphqAb33WReFIZDU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "EmailTracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rofCIR1q0JgyVyCx4LB_IK_orFsbphqAb33WReFIZDU/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "="
+            }
+          ]
+        },
+        "options": {
+          "returnAllMatches": "returnAllMatches"
+        }
+      },
+      "id": "373a4c74-ba4a-4308-84ca-f1d34d07df22",
+      "name": "Get Order Info That Has't Been Emailed",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -1440,
+        460
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SxUgxWQTbtlDIDK8",
+          "name": "Google Sheets account Hai.retail.online"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "55954322-6f35-4d71-8176-0adb901bba81",
+              "leftValue": "={{ $json.processedAt.toDateTime().setZone('Europe/Berlin') }}",
+              "rightValue": "={{ $now.setZone('Europe/Berlin').endOf('day').minus(5, 'days').toISO() }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "beforeOrEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1220,
+        460
+      ],
+      "id": "9007acdb-d1bc-4017-bf6b-8a53c50b97ad",
+      "name": "Check Time  Shipment Created 5 Days Before"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -960,
+        460
+      ],
+      "id": "1edbaded-878b-4f28-85f1-0974441dda9b",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "944ab018-61cf-472c-9711-e55b63df79c6",
+              "name": "orderId",
+              "value": "={{ $('Get Order Details').item.json.orderId }}",
+              "type": "string"
+            },
+            {
+              "id": "f151cf15-ef14-4090-b906-531e2500329b",
+              "name": "orderPlacedDateTime",
+              "value": "={{ $('Get Order Details').item.json.orderPlacedDateTime }}",
+              "type": "string"
+            },
+            {
+              "id": "7cff2050-83f7-494d-a0c1-7386aff76a0d",
+              "name": "billingDetails",
+              "value": "={{ $('Get Order Details').item.json.shipmentDetails }}",
+              "type": "object"
+            },
+            {
+              "id": "f4c5f7ee-283a-4a35-a75e-901d0fe89ce8",
+              "name": "billingDetails.orderReference",
+              "value": "={{ $('Get Order Details').item.json.orderId }}",
+              "type": "string"
+            },
+            {
+              "id": "ce92514e-8cb0-478e-bece-aeaf728061fe",
+              "name": "shipmentDetails",
+              "value": "={{ $('Get Order Details').item.json.shipmentDetails }}",
+              "type": "object"
+            },
+            {
+              "id": "0b068adc-5924-4bf7-a46b-e8c4eb41b48b",
+              "name": "customerEmail",
+              "value": "={{ $('Get Order Details').item.json.shipmentDetails.email }}",
+              "type": "string"
+            },
+            {
+              "id": "76a6da89-04fa-49f7-a353-c06992b7fdf4",
+              "name": "orderItems[0]",
+              "value": "={{ $('Get Order Details').item.json.orderItems[0] }}",
+              "type": "object"
+            },
+            {
+              "id": "c8722927-5abb-410e-9f34-f4e1c89e7a6c",
+              "name": "ean",
+              "value": "={{ $json.eans[0].ean }}",
+              "type": "string"
+            },
+            {
+              "id": "7a07791e-8c36-49b4-9a9a-12fa8537d733",
+              "name": "extractedFrom",
+              "value": "orderItems[0].product.ean",
+              "type": "string"
+            },
+            {
+              "id": "073fd5b5-20a0-412d-9628-2fc6726dc423",
+              "name": "firstProduct",
+              "value": "={{ $('Get Order Details').item.json.orderItems[0].product }}",
+              "type": "object"
+            },
+            {
+              "id": "191772ba-b1ba-4d10-9a81-b4a1e4496ee6",
+              "name": "originalOrderData.orderId",
+              "value": "={{ $('Get Order Details').item.json.orderId }}",
+              "type": "string"
+            },
+            {
+              "id": "dfb15a14-7134-4e68-939a-a9979027cf30",
+              "name": "originalOrderData.pickupPoint",
+              "value": "={{ $('Get Order Details').item.json.pickupPoint }}",
+              "type": "string"
+            },
+            {
+              "id": "adc902af-df3e-4eaa-9884-689fbd12ef85",
+              "name": "originalOrderData.orderPlacedDateTime",
+              "value": "={{ $('Get Order Details').item.json.orderPlacedDateTime }}",
+              "type": "string"
+            },
+            {
+              "id": "33d2347a-9b2c-487b-9128-47f9d4d19907",
+              "name": "originalOrderData.shipmentDetails",
+              "value": "={{ $('Get Order Details').item.json.shipmentDetails }}",
+              "type": "object"
+            },
+            {
+              "id": "b7333119-faf8-4003-8f78-920fa9ba0e86",
+              "name": "originalOrderData.billingDetails",
+              "value": "={{ $('Get Order Details').item.json.shipmentDetails }}",
+              "type": "object"
+            },
+            {
+              "id": "41ecf6c9-5c30-4a3b-aee7-ccfd6daa8cb0",
+              "name": "originalOrderData.billingDetails.orderReference",
+              "value": "={{ $('Get Order Details').item.json.orderId }}",
+              "type": "string"
+            },
+            {
+              "id": "76b60432-611d-4067-a1d6-64816761797d",
+              "name": "originalOrderData.orderItems[0]",
+              "value": "={{ $('Get Order Details').item.json.orderItems[0] }}",
+              "type": "object"
+            },
+            {
+              "id": "d0b78d92-f282-47c5-a24d-4525865d564a",
+              "name": "bolProductId",
+              "value": "={{ $json.bolProductId }}",
+              "type": "string"
+            },
+            {
+              "id": "7aa70a24-2492-43f4-9008-721a9950c613",
+              "name": "bpid",
+              "value": "={{ $json.bolProductId }}",
+              "type": "string"
+            },
+            {
+              "id": "dc704e50-fe6e-433a-a056-7da8113a4da7",
+              "name": "productName",
+              "value": "={{ $('Get Order Details').item.json.orderItems[0].product.title }}",
+              "type": "string"
+            },
+            {
+              "id": "40798a10-87a3-43c6-b7cc-519ee78f78da",
+              "name": "productId",
+              "value": "={{ $json.bolProductId }}",
+              "type": "string"
+            },
+            {
+              "id": "d168bb74-74e7-4c1c-8e6f-dec2a4636067",
+              "name": "locale",
+              "value": "nl/nl",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -320,
+        480
+      ],
+      "id": "8c677073-de8e-4deb-938d-41e54a173a13",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const order = $('Edit Fields').first().json.originalOrderData;\nconst invoice = $('Generate Invoice').first().json;\nconst reviewUrlData = $('Generate Review URL').first().json;\n\n\nconst klant = order.billingDetails || {};\nconst customerName = `${klant.firstName || ''} ${klant.surname || ''}`.trim() || invoice.customerName || 'Klant';\nconst customerEmail = klant.email || order.customerEmail;\nconst reviewUrl = reviewUrlData.reviewUrl || '';\n\n// === TIMING BEREKENING ===\nconst orderPlacedDateTime = order.orderPlacedDateTime;\nconst orderDate = new Date(orderPlacedDateTime);\n\n// Bereken verzenddatum: 3 dagen na bestelling + volgende dag om 9:00\nfunction calculateSendDate(orderDate) {\n  // 3 dagen toevoegen\n  const threeDaysLater = new Date(orderDate);\n  threeDaysLater.setDate(threeDaysLater.getDate() + 3);\n  \n  // Volgende dag om 9:00\n  const sendDate = new Date(threeDaysLater);\n  sendDate.setDate(sendDate.getDate() + 1);\n  sendDate.setHours(9, 0, 0, 0); // 9:00:00\n  \n  return sendDate;\n}\n\nconst scheduledSendDate = calculateSendDate(orderDate);\n\n// GEFIXTE PRODUCT TITLE LOGIC\nconst orderItems = order.orderItems || [];\nconst firstItem = orderItems[0] || {};\nconst productTitle = firstItem.product?.title || firstItem.title || 'Product';\n\nconst productImage = firstItem.imageUrl || '';\nconst orderId = order.orderId || 'Onbekend';\n\n\nconst emailHtml = `\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n<body style=\"font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #ffffff;\">\n    \n    <!-- Main Container -->\n    <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width: 600px; margin: 0 auto; background-color: white;\">\n        \n        <!-- Header -->\n        <tr>\n            <td style=\"padding: 40px 30px 30px 30px;\">\n                <h1 style=\"color: #2c3e50; margin: 0 0 15px 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;\">Hoi ${customerName},</h1>\n                <p style=\"color: #7f8c8d; margin: 0; font-size: 18px; font-weight: 300;\">\n                    Even een <em style=\"color: #e74c3c; font-style: normal; font-weight: 500;\">snelle</em> vraag over:\n                </p>\n            </td>\n        </tr>\n        \n        <!-- Product Section -->\n        <tr>\n            <td style=\"padding: 0 30px 30px 30px;\">\n                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width: 100%; background-color: #f8f9fa; border: 2px solid #e3f2fd; border-radius: 12px; padding: 25px;\">\n                    <tr>\n                        <td style=\"width: 100px; vertical-align: middle;\">\n                            ${productImage ? \n                                `<img src=\"${productImage}\" alt=\"${productTitle}\" style=\"width: 80px; height: 80px; object-fit: contain; border-radius: 8px;\">` : \n                                '<div style=\"width: 80px; height: 80px; background-color: #ddd; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 30px;\">📦</div>'\n                            }\n                        </td>\n                        <td style=\"padding-left: 25px; vertical-align: middle;\">\n                            <div style=\"font-size: 18px; font-weight: 600; color: #2c3e50; line-height: 1.3;\">${productTitle}</div>\n                        </td>\n                    </tr>\n                </table>\n            </td>\n        </tr>\n        \n        <!-- Main Message -->\n        <tr>\n            <td style=\"padding: 0 30px 25px 30px;\">\n                <p style=\"color: #2c3e50; margin: 0 0 20px 0; font-size: 18px; line-height: 1.6; font-weight: 400;\">\n                    We zien dat <strong style=\"color: #27ae60; font-weight: 700;\">94%</strong> van de kopers dol is op <strong>${productTitle}</strong> – maar slechts <strong style=\"color: #e74c3c; font-weight: 700;\">3%</strong> vertelt het hardop. \n                    Jouw ervaring weegt daardoor <strong style=\"color: #e74c3c; font-weight: 700; font-size: 20px;\">33× zwaarder</strong> dan die van anderen.\n                </p>\n                \n                <div style=\"border-left: 4px solid #3498db; padding-left: 20px; margin: 25px 0;\">\n                    <p style=\"color: #7f8c8d; margin: 0; font-size: 16px; font-style: italic; font-weight: 300;\">\n                        Reviews in de eerste 14 dagen zijn het meest waardevol (vers in je geheugen!).\n                    </p>\n                </div>\n                \n                <p style=\"color: #2c3e50; margin: 0; font-size: 20px; font-weight: 600;\">\n                    ➡️ Wil je 30 seconden nemen om 1–2 zinnen te schrijven? Klik op onderstaande button.\n                </p>\n            </td>\n        </tr>\n        \n        <!-- CTA Button -->\n        <tr>\n            <td style=\"padding: 30px; text-align: center;\">\n                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin: 0 auto;\">\n                    <tr>\n                        <td style=\"background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px;\">\n                            <a href=\"${reviewUrl}\" style=\"display: inline-block; color: white; padding: 20px 45px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 18px; letter-spacing: 0.5px;\">\n                                Deel mijn review ⭐\n                            </a>\n                        </td>\n                    </tr>\n                </table>\n            </td>\n        </tr>\n        \n        <!-- Bonus Section -->\n        <tr>\n            <td style=\"padding: 0 30px 30px 30px;\">\n                <div style=\"border: 2px dashed #3498db; border-radius: 8px; padding: 20px; text-align: center;\">\n                    <p style=\"color: #3498db; margin: 0; font-size: 16px; font-weight: 600;\">\n                        <strong>🎁 Bonus:</strong> we plaatsen je review binnen 24 uur live; duizenden klanten profiteren direct van jouw feedback.\n                    </p>\n                </div>\n            </td>\n        </tr>\n        \n        <!-- Closing -->\n        <tr>\n            <td style=\"padding: 30px 30px 20px 30px;\">\n                <p style=\"color: #2c3e50; margin: 0; font-size: 18px; font-weight: 400; text-align: center;\">\n                    Dankjewel – positief of kritisch – we groeien van elke opmerking.\n                </p>\n            </td>\n        </tr>\n        \n        <!-- Divider -->\n        <tr>\n            <td style=\"padding: 0 30px;\">\n                <div style=\"height: 1px; background: linear-gradient(to right, transparent, #bdc3c7, transparent);\"></div>\n            </td>\n        </tr>\n        \n        <!-- Footer -->\n        <tr>\n            <td style=\"padding: 30px; text-align: center;\">\n                <p style=\"color: #7f8c8d; margin: 0 0 15px 0; font-size: 18px; font-weight: 400;\">\n                    Hartelijke groet,\n                </p>\n                <p style=\"color: #2c3e50; margin: 0 0 5px 0; font-size: 22px; font-weight: 700;\">\n                    Joost\n                </p>\n                <p style=\"color: #7f8c8d; margin: 0 0 20px 0; font-size: 16px; font-style: italic; font-weight: 300;\">\n                    Founder, Raved Fabrics\n                </p>\n                \n                <p style=\"color: #95a5a6; margin: 0; font-size: 14px; font-weight: 400;\">\n                    <strong>P.S.</strong> Je BTW-factuur zit als bijlage. Vragen? Reply gerust!\n                </p>\n            </td>\n        </tr>\n        \n    </table>\n    \n</body>\n</html>\n`;\n\n// Return ENKEL object voor \"Run Once for Each Item\" mode\nreturn {\n  json: {\n    to: customerEmail,\n    from: \"Bol Klantenservice | Raved Fabrics <bol@ravedfabrics.com>\", // Echte email adres\n    subject: `Over jouw bestelling ${orderId} van Raved via Bol`, // Authentieke Bol.com stijl\n    html: emailHtml,\n    uniqueKey: $('Edit Fields').first().json.orderId+\"_\"+$('Get Order Info That Has\\'t Been Emailed').first().json.shipmentId,\n    \n    // TIMING INFO VOOR WAIT NODE\n    scheduledSendDate: scheduledSendDate.toISOString(),\n    orderPlacedDate: orderDate.toISOString(),\n    customerName: customerName,\n    orderId: orderId\n  },\n  binary: $('Download PDF').first().binary  // PDF bijlage van Download PDF\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        700
+      ],
+      "id": "1b6064f3-76ec-4304-ad73-a4023fdd9678",
+      "name": "Code Formart HTML to send Email"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1780,
+        120
+      ],
+      "id": "659eed2a-542a-41fc-b084-bf14fda92b14",
+      "name": "Trigger Run Once Every 2H"
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.from }}",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "=attachment"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -120,
+        700
+      ],
+      "id": "9026826a-7e02-4418-8360-5c4826f81f09",
+      "name": "Send Email",
+      "webhookId": "8f4a7ea5-b425-4940-9bd8-fa772d92f8f2",
+      "credentials": {
+        "smtp": {
+          "id": "v59ATFXBDmqLsgfB",
+          "name": "bol@ravedfabrics.com"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "amount": 8
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -480,
+        -120
+      ],
+      "id": "74c847c6-62f1-4330-ae62-8fa8bdb3aadc",
+      "name": "Wait 8s",
+      "webhookId": "89a33b96-e7a9-4cda-b5f6-005ec499bb27"
+    },
+    {
+      "parameters": {
+        "fromEmail": "=Bol Klantenservice | Raved Fabrics <bol@ravedfabrics.com>",
+        "toEmail": "=phamngochuy0102@gmail.com",
+        "subject": "=Hello Joost",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n<body style=\"font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #ffffff;\">\n\n  <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width: 600px; margin: 0 auto; background-color: #ffffff;\">\n\n    <!-- Header -->\n    <tr>\n      <td style=\"padding: 40px 30px 30px 30px;\">\n        <h1 style=\"color: #2c3e50; margin: 0 0 15px 0; font-size: 26px; font-weight: bold;\">Hoi Lian Wierikx,</h1>\n        <p style=\"color: #7f8c8d; margin: 0; font-size: 16px;\">\n          Even een <span style=\"color: #e74c3c;\"><strong>snelle</strong></span> vraag over:\n        </p>\n      </td>\n    </tr>\n\n    <!-- Product Section -->\n    <tr>\n      <td style=\"padding: 0 30px 30px 30px;\">\n        <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width: 100%; background-color: #f8f9fa; border: 1px solid #e3f2fd; border-radius: 8px;\">\n          <tr>\n            <td style=\"width: 80px; padding: 15px;\">\n              <div style=\"width: 60px; height: 60px; background-color: #dddddd; border-radius: 6px; text-align: center; line-height: 60px; font-size: 28px;\">📦</div>\n            </td>\n            <td style=\"padding-left: 15px;\">\n              <div style=\"font-size: 16px; font-weight: bold; color: #2c3e50;\">\n                Raved Blauw Rond Polyester Tafelkleed - 160 cm ø - Kreukvrij\n              </div>\n            </td>\n          </tr>\n        </table>\n      </td>\n    </tr>\n\n    <!-- Main Message -->\n    <tr>\n      <td style=\"padding: 0 30px 25px 30px;\">\n        <p style=\"color: #2c3e50; font-size: 16px;\">\n          We zien dat <strong style=\"color: #27ae60;\">94%</strong> van de kopers dol is op <strong>Raved Blauw Rond Polyester Tafelkleed - 160 cm ø - Kreukvrij</strong> – maar slechts <strong style=\"color: #e74c3c;\">3%</strong> vertelt het hardop.\n          Jouw ervaring weegt daardoor <strong style=\"color: #e74c3c; font-size: 18px;\">33× zwaarder</strong> dan die van anderen.\n        </p>\n        <div style=\"border-left: 4px solid #3498db; padding-left: 15px; margin: 20px 0;\">\n          <p style=\"color: #7f8c8d; margin: 0; font-size: 14px; font-style: italic;\">\n            Reviews in de eerste 14 dagen zijn het meest waardevol (vers in je geheugen!).\n          </p>\n        </div>\n        <p style=\"color: #2c3e50; font-size: 16px; font-weight: bold;\">\n          ➡️ Wil je 30 seconden nemen om 1–2 zinnen te schrijven? Klik op onderstaande button.\n        </p>\n      </td>\n    </tr>\n\n    <!-- CTA Button (Simplified & Compatible) -->\n    <tr>\n      <td style=\"padding: 30px; text-align: center;\">\n        <a href=\"https://www.bol.com/nl/nl/p/raved-blauw-rond-polyester-tafelkleed-160-cm-kreukvrij/9300000112564314/?mode=reviewStart\"\n           style=\"display: inline-block;\n                  background-color: #4A90E2;\n                  color: #ffffff;\n                  padding: 14px 28px;\n                  text-decoration: none;\n                  font-weight: bold;\n                  font-size: 16px;\n                  border-radius: 6px;\n                  border: 1px solid #357ABD;\">\n          ⭐ Deel mijn review\n        </a>\n      </td>\n    </tr>\n\n    <!-- Bonus Section -->\n    <tr>\n      <td style=\"padding: 0 30px 30px 30px;\">\n        <div style=\"border: 1px dashed #3498db; border-radius: 6px; padding: 16px; text-align: center;\">\n          <p style=\"color: #3498db; margin: 0; font-size: 14px;\">\n            🎁 <strong>Bonus:</strong> we plaatsen je review binnen 24 uur live; duizenden klanten profiteren direct van jouw feedback.\n          </p>\n        </div>\n      </td>\n    </tr>\n\n    <!-- Closing -->\n    <tr>\n      <td style=\"padding: 30px 30px 10px 30px;\">\n        <p style=\"color: #2c3e50; font-size: 16px; text-align: center;\">\n          Dankjewel – positief of kritisch – we groeien van elke opmerking.\n        </p>\n      </td>\n    </tr>\n\n    <!-- Divider -->\n    <tr>\n      <td style=\"padding: 0 30px;\">\n        <hr style=\"border: none; height: 1px; background-color: #ddd;\">\n      </td>\n    </tr>\n\n    <!-- Footer -->\n    <tr>\n      <td style=\"padding: 20px 30px; text-align: center;\">\n        <p style=\"color: #7f8c8d; font-size: 16px; margin: 0;\">Hartelijke groet,</p>\n        <p style=\"color: #2c3e50; font-size: 18px; font-weight: bold; margin: 5px 0;\">Joost</p>\n        <p style=\"color: #7f8c8d; font-size: 14px; font-style: italic; margin: 0 0 10px;\">Founder, Raved Fabrics</p>\n        <p style=\"color: #95a5a6; font-size: 13px;\">\n          <strong>P.S.</strong> Je BTW-factuur zit als bijlage. Vragen? Reply gerust!\n        </p>\n      </td>\n    </tr>\n\n  </table>\n\n</body>\n</html>\n",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "=attachment"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -120,
+        980
+      ],
+      "id": "93cf8e0a-06a3-42a9-8b14-01a1bba0ee9c",
+      "name": "Send Email1",
+      "webhookId": "8f4a7ea5-b425-4940-9bd8-fa772d92f8f2",
+      "credentials": {
+        "smtp": {
+          "id": "v59ATFXBDmqLsgfB",
+          "name": "bol@ravedfabrics.com"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Download PDF": {
+      "main": [
+        [
+          {
+            "node": "Code Formart HTML to send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create PDF": {
+      "main": [
+        [
+          {
+            "node": "Download PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Invoice": {
+      "main": [
+        [
+          {
+            "node": "Create PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Order Details": {
+      "main": [
+        [
+          {
+            "node": "Get Product Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to Spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Check Previously Tracked Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Shipments": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Review URL": {
+      "main": [
+        [
+          {
+            "node": "Generate Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Product Details": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait 8s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Completed": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Order Info That Has't Been Emailed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Check Time Order Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Previously Tracked Orders": {
+      "main": [
+        [
+          {
+            "node": "Add to Spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Check Time Order Created": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Order Info That Has't Been Emailed": {
+      "main": [
+        [
+          {
+            "node": "Check Time  Shipment Created 5 Days Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Time  Shipment Created 5 Days Before": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get Order Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Generate Review URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Formart HTML to send Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Mark as Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Run Once Every 2H": {
+      "main": [
+        [
+          {
+            "node": "Get Shipments",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Order Info That Has't Been Emailed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 8s": {
+      "main": [
+        [
+          {
+            "node": "Check Spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e3af90d7-1d0c-4833-b915-5123f62829f1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6e54678a53d7f49248c5f099ed5a913abc90c7037941e56ed5af77444c54e2c4"
+  },
+  "id": "n2XIAqOqtQLbYGa5",
+  "tags": []
+}

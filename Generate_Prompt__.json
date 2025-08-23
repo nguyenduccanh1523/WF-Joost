@@ -6,8 +6,8 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -80,
-        0
+        -680,
+        200
       ],
       "id": "f46c9bff-1ea6-4a85-a7ef-c7b7c626ba58",
       "name": "When clicking ‘Execute workflow’"
@@ -60,8 +60,8 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.1,
       "position": [
-        580,
-        -440
+        440,
+        -880
       ],
       "id": "1b72ac1e-faa3-49c6-b41c-b8cac08aec45",
       "name": "When chat message received",
@@ -74,8 +74,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.7,
       "position": [
-        800,
-        -460
+        660,
+        -900
       ],
       "id": "fa60431d-a11c-4b7e-8b8d-4a63794c6057",
       "name": "Basic LLM Chain"
@@ -92,8 +92,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        920,
-        -300
+        780,
+        -740
       ],
       "id": "e2d1964c-004d-4df3-b31f-9e6b482f05bd",
       "name": "OpenAI Chat Model"
@@ -125,7 +125,7 @@
         "url": "https://api.openai.com/v1/images/generations",
         "sendHeaders": true,
         "specifyHeaders": "json",
-        "jsonHeaders": "=[\n  {\n    \"name\": \"Fake-Auth\",\n    \"value\": \"REMOVE_THIS_BEFORE_DEPLOY\"\n  },\n  {\n    \"name\": \"Content-Type\",\n    \"value\": \"application/json\"\n  }\n]",
+        "jsonHeaders": "=[\n  {\n    \"name\": \"Authorization\",\n    \"value\": \"Bearer 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\"\n  },\n  {\n    \"name\": \"Content-Type\",\n    \"value\": \"application/json\"\n  }\n]",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"model\": \"dall-e-3\",\n  \"prompt\": \"{{$json['prompt']}}\",\n  \"n\": 1,\n  \"size\": \"1024x1024\"\n}\n",
@@ -134,8 +134,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        340,
-        -320
+        200,
+        -760
       ],
       "id": "e17ed2ff-ccf4-4a2a-8507-32bf755897d3",
       "name": "HTTP OpenAI generate"
@@ -148,8 +148,8 @@
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [
-        1660,
-        0
+        1480,
+        -820
       ],
       "id": "915195cb-e9a1-4c62-81be-bac72dcd80e3"
     },
@@ -158,8 +158,8 @@
       "type": "n8n-nodes-base.html",
       "typeVersion": 1.2,
       "position": [
-        1880,
-        0
+        1700,
+        -820
       ],
       "id": "65b9a671-9d2a-4409-946e-2db0e3d7420e",
       "name": "HTML"
@@ -183,8 +183,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1260,
-        -260
+        1120,
+        -700
       ],
       "id": "310a868c-5aeb-4008-8f27-c16f2cdb9ae5",
       "name": "HTTP File.io"
@@ -250,19 +250,347 @@
           "name": "Bearer Auth Joost Dropbox"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Code').first().json; // Dữ liệu từ node Code đầu vào\nconst dropbox = $('Get Link').first().json; // Dữ liệu từ node Dropbox (ảnh)\nconst imageUrl = dropbox.url || 'https://via.placeholder.com/400x400.png?text=Preview+Unavailable';\n\nconst email = input.email || 'user@example.com';\nconst clothing = input.clothing_desc || 'No description';\nconst notes = input.notes || 'No notes provided';\nconst previewLink = imageUrl;\n\n// Fillout URL với prefill params\nconst filloutBaseUrl = 'https://fillout.com/form/your-form-id';\nconst approveUrl = `${filloutBaseUrl}?email=${encodeURIComponent(email)}&preview=${encodeURIComponent(previewLink)}&status=approve`;\nconst rejectUrl = `${filloutBaseUrl}?email=${encodeURIComponent(email)}&preview=${encodeURIComponent(previewLink)}&status=disapprove`;\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<body style=\"font-family: Arial, sans-serif; padding: 20px;\">\n  <h2>🧍 Your Custom Action Figure Preview</h2>\n  <p><strong>Clothing:</strong> ${clothing}</p>\n  <p><strong>Notes:</strong> ${notes}</p>\n  <img src=\"${previewLink}\" alt=\"3D Preview\" style=\"max-width: 100%; border-radius: 8px; margin: 20px 0;\" />\n  <p style=\"font-size: 16px;\">Are you happy with this design?</p>\n  <div style=\"margin-top: 20px;\">\n    <a href=\"${approveUrl}\" style=\"padding: 10px 20px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 6px; margin-right: 10px;\">✅ Approve</a>\n    <a href=\"${rejectUrl}\" style=\"padding: 10px 20px; background-color: #ef4444; color: white; text-decoration: none; border-radius: 6px;\">❌ Not OK</a>\n  </div>\n</body>\n</html>\n`;\n\nreturn {\n  json: {\n    to: email,\n    subject: \"Your 3D Action Figure Preview is Ready!\",\n    html: html,\n    preview_url: previewLink,\n    clothing_desc: clothing,\n    notes: notes\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        0
+      ],
+      "id": "ef723f72-d040-4e3b-8600-231055a52a56",
+      "name": "Code Formart HTML to send Email"
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.from }}",
+        "toEmail": "=phamngochuy0102@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "=attachment",
+          "bccEmail": "joost@ravedfabrics.com"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2300,
+        0
+      ],
+      "id": "e19d9725-7128-44e8-8a7e-0573b6caf93e",
+      "name": "Send Email1",
+      "webhookId": "8f4a7ea5-b425-4940-9bd8-fa772d92f8f2",
+      "credentials": {
+        "smtp": {
+          "id": "v59ATFXBDmqLsgfB",
+          "name": "bol@ravedfabrics.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Html wf\n",
+        "height": 260,
+        "width": 200
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1860,
+        -100
+      ],
+      "typeVersion": 1,
+      "id": "fec9ed6f-caa9-4392-a2a5-3c63c1725231",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 1 figure",
+        "height": 80,
+        "width": 320,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -180,
+        -220
+      ],
+      "typeVersion": 1,
+      "id": "90b7f6f7-9404-4de0-9762-8584c5a8a0f4",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Multiple figures",
+        "height": 80,
+        "width": 320,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -180,
+        280
+      ],
+      "typeVersion": 1,
+      "id": "50d2c922-02e6-4463-9dec-0aac7bc74187",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  email: \"user@example.com\",\n  figure_type: \"multiple\",\n  shared_clothing: true,\n  figures: [\n    {\n      name: \"Alice\",\n      photo_url: \"https://example.com/photos/alice.jpg\",\n      clothing_desc: \"Red uniform with golden trims\",\n      notes: \"Make her the team leader\",\n    },\n    {\n      name: \"Bob\",\n      photo_url: \"https://example.com/photos/bob.jpg\",\n      clothing_desc: \"Red uniform with golden trims\",\n      notes: \"Give him a flag accessory\",\n    },\n    {\n      name: \"Charlie\",\n      photo_url: \"https://example.com/photos/charlie.jpg\",\n      clothing_desc: \"Red uniform with golden trims\",\n      notes: \"Add a backpack\",\n    },\n  ],\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -180,
+        660
+      ],
+      "id": "94c64def-5158-48d0-bc15-18727ee3e56f",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "functionCode": "const email = $json[\"email\"];\nconst photoUrl = $json[\"photo_url\"];\nconst clothingDesc = $json[\"clothing_desc\"];\nconst notes = $json[\"notes\"];\n\nconst prompt = `Create a high-quality 3D-rendered collectible action figure based on the portrait photo at ${photoUrl}. \nThe character should be wearing: ${clothingDesc}. \nSpecial notes for the pose or expression: ${notes}. \nEnsure the figure has a heroic, collectible-style pose, similar to movie-style figurines. Render in full color and studio lighting.`;\n\n\nreturn [\n  {\n    json: {\n      prompt: prompt,\n      email: email\n    }\n  }\n];"
+      },
+      "name": "Generate Prompt (Function)2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        540,
+        640
+      ],
+      "id": "98e0e8c2-5e2d-4dc7-8513-d52166c46965"
+    },
+    {
+      "parameters": {
+        "content": "## Generate Prompt",
+        "height": 360,
+        "width": 440
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        500,
+        460
+      ],
+      "typeVersion": 1,
+      "id": "363cb580-191e-4cfb-8b78-0123880e811f",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "={{ $json.prompt }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        780,
+        640
+      ],
+      "id": "56d5c9a3-d300-4f95-adf8-862bbe97d4de",
+      "name": "OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "2oY3nw4V0Uspsrzp",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "=/Action-Figures/{{ $json[\"filename\"] }}",
+        "binaryData": true
+      },
+      "type": "n8n-nodes-base.dropbox",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        640
+      ],
+      "id": "a8457a28-5fd1-4651-ae29-7bf7d356375c",
+      "name": "Dropbox1",
+      "credentials": {
+        "dropboxApi": {
+          "id": "jvckrdLCbXuSncAY",
+          "name": "Dropbox Joost"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "return [\n  {\n    json: {\n      filename: `output_${new Date().toISOString().replace(/[-:.TZ]/g, \"\")}.png`\n    },\n    binary: items[0].binary\n  }\n];"
+      },
+      "name": "Set file for Dropbox (Function)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1020,
+        640
+      ],
+      "id": "0e496ceb-5b77-4a6a-ada9-5c35167a1086"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Content-Type\": \"application/json\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"path\": \"{{ $json[\"path_display\"] }}\",\n  \"settings\": {\n    \"requested_visibility\": \"public\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1500,
+        640
+      ],
+      "id": "dd695b48-1d12-4c69-a047-3a39a4fbcf99",
+      "name": "Get Link1",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "iErP8eE0V4l4OiRM",
+          "name": "Bearer Auth Joost Dropbox"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "figures",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        20,
+        920
+      ],
+      "id": "2cb2ef30-68da-4020-97cf-27a88fe02707",
+      "name": "Split Out",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        240,
+        920
+      ],
+      "id": "d42871ca-1b2f-431b-a03e-261a17fe5dcb",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1740,
+        480
+      ],
+      "id": "25e51b71-e2d8-4b70-a507-2aacc579bcc3",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "functionCode": "const urls = items.map(item => item.json.url);\nreturn [{\n  json: {\n    all_image_urls: urls\n  }\n}];\n"
+      },
+      "name": "Merge Link",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1940,
+        480
+      ],
+      "id": "56d2af6f-9d43-4794-9542-6099673831c4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2960,
+        -220
+      ],
+      "id": "7590f0b1-8882-4f7e-af71-f23b8f18f119",
+      "name": "Wait",
+      "webhookId": "7ab3db00-cc1e-44dc-b0d9-7104b4f0c999"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.dropboxapi.com/2/sharing/list_shared_links",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Content-Type\": \"application/json\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"path\": \"{{ $json[\"path_display\"] }}\",\n  \"direct_only\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        960
+      ],
+      "id": "99c6c6bb-c49a-4335-9bf7-545d52f17668",
+      "name": "Get Link2",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "iErP8eE0V4l4OiRM",
+          "name": "Bearer Auth Joost Dropbox"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  email: \"user@example.com\",\n  figure_type: \"multiple\",\n  shared_clothing: true,\n  figures: [\n    {\n      name: \"Alice\",\n      path_display: \"/Action-Figures/output_20250714130119123.png\",\n      clothing_desc: \"Red uniform with golden trims\",\n      notes: \"Make her the team leader\",\n    },\n    {\n      name: \"Bob\",\n      path_display: \"/Action-Figures/output_20250714130135025.png\",\n      clothing_desc: \"Red uniform with golden trims\",\n      notes: \"Give him a flag accessory\",\n    },\n    {\n      name: \"Charlie\",\n      path_display: \"/Action-Figures/output_20250714130153865.png\",\n      clothing_desc: \"Red uniform with golden trims\",\n      notes: \"Add a backpack\",\n    },\n  ],\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        920
+      ],
+      "id": "68d74ead-d02e-4e4d-9d92-8464f7eea8c3",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "functionCode": "const urls = items.map(item => item.json.links.url);\nreturn [{\n  json: {\n    all_image_urls: urls\n  }\n}];\n"
+      },
+      "name": "Merge Link1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        960
+      ],
+      "id": "b893aee9-54d9-4010-8ad2-95d4e501ebae"
     }
   ],
   "pinData": {},
   "connections": {
     "When clicking ‘Execute workflow’": {
       "main": [
-        [
-          {
-            "node": "Code",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Code": {
@@ -362,13 +690,134 @@
           }
         ]
       ]
+    },
+    "Code1": {
+      "main": [
+        []
+      ]
+    },
+    "Generate Prompt (Function)2": {
+      "main": [
+        [
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "Set file for Dropbox (Function)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dropbox1": {
+      "main": [
+        [
+          {
+            "node": "Get Link1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set file for Dropbox (Function)": {
+      "main": [
+        [
+          {
+            "node": "Dropbox1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get Link2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Link1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Link2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Link1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "688e17d2-a6c3-421c-aec1-5501968e367f",
+  "versionId": "bd393f74-7975-4d67-9285-f75e9b34dd31",
   "meta": {
     "instanceId": "6e54678a53d7f49248c5f099ed5a913abc90c7037941e56ed5af77444c54e2c4"
   },

@@ -1,0 +1,122 @@
+{
+  "name": "Submit form",
+  "nodes": [
+    {
+      "parameters": {
+        "form": "t4vWJKjrTpus"
+      },
+      "type": "n8n-nodes-fillout.filloutTrigger",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -180
+      ],
+      "id": "13f41d8d-2705-4ca7-9c09-1524d49685a8",
+      "name": "Fillout Trigger",
+      "webhookId": "f9902ccf-6269-4935-bb91-829b12c096b2",
+      "credentials": {
+        "filloutApi": {
+          "id": "cpCkrQqQqntZaWlR",
+          "name": "Fillout account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/contacts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "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"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"email\": \"{{ $json.questions.cnPV.value }}\",\n  \"sms\": \"{{ $json.smsE164 }}\",\n  \"attributes\": {\n    \"FIRSTNAME\": \"{{ $json.questions.rrfU.value }}\",\n    \"LASTNAME\": \"{{ $json.questions['7SmA'].value }}\",\n    \"PHONE\": \"{{ $json.smsE164 }}\"\n  },\n  \"listIds\": [6],\n  \"updateEnabled\": true\n}",
+        "options": {}
+      },
+      "id": "9f6d82ae-8bad-4bc1-8dec-a749480b31f6",
+      "name": "HTTP Request: Brevo Upsert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        660,
+        -180
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const q = item.json.questions || {};\n  let raw = String(q['3j97']?.value || '').trim();\n\n  // strip rommel\n  raw = raw.replace(/\\s+/g, '').replace(/[().-]/g, '');\n\n  // 00 -> +\n  if (raw.startsWith('00')) raw = '+' + raw.slice(2);\n\n  // Als nog geen +: simpele NL/BE heuristiek\n  if (!raw.startsWith('+')) {\n    if (/^0\\d{9}$/.test(raw)) {        // NL 06/0xx\n      raw = '+31' + raw.slice(1);\n    } else if (/^(31|32)\\d{8,11}$/.test(raw)) {\n      raw = '+' + raw;\n    }\n  }\n\n  // Validatie E.164 (8–15 cijfers)\n  if (!/^\\+\\d{8,15}$/.test(raw)) raw = null;\n\n  return { json: { ...item.json, smsE164: raw } };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        -180
+      ],
+      "id": "4d61abba-00dd-4dc4-88ad-92dae1ad600b",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "209686cc-2d42-4b04-8d3f-d5e58aca81d0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -360
+      ],
+      "id": "930bb10b-bfde-4e1b-a4be-b4ed08185a9f",
+      "name": "Webhook",
+      "webhookId": "209686cc-2d42-4b04-8d3f-d5e58aca81d0"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Fillout Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request: Brevo Upsert": {
+      "main": [
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a02a0379-2155-4cf7-8ba2-a8cff563c332",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6e54678a53d7f49248c5f099ed5a913abc90c7037941e56ed5af77444c54e2c4"
+  },
+  "id": "M5RNul39mPDHNwqE",
+  "tags": []
+}

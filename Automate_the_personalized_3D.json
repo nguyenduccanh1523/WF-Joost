@@ -1,0 +1,293 @@
+{
+  "name": "Automate the personalized 3D",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2020,
+        1300
+      ],
+      "id": "2be24eb7-a9f8-4c74-b4de-7f1d9e10d2e6",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "event": "order.created"
+      },
+      "type": "n8n-nodes-base.wooCommerceTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1740,
+        1600
+      ],
+      "id": "f6e545e7-9edf-4124-a2bb-a95f516359ab",
+      "name": "WooCommerce Trigger",
+      "webhookId": "7a4f5891-c6ac-4a1e-85a0-232d8bf63a84",
+      "credentials": {
+        "wooCommerceApi": {
+          "id": "etpthC5I5sk4ixQS",
+          "name": "WooCommerce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.hai-retail.com/wp-json/wc/v3/orders",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "consumer_key",
+              "value": "ck_ec4bc7af2d655c66f41187dba56aebadef7ea278"
+            },
+            {
+              "name": "consumer_secret",
+              "value": "cs_56015c902fe99920af33d8697a54ee165ae1009c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1980,
+        1140
+      ],
+      "id": "dead1012-2c4f-4d20-ace3-85f06162d14e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ORSfIBCJE1XjRbj23HIRhLIC-Ja9e52ilM81cov6xbw",
+          "mode": "list",
+          "cachedResultName": "Client For Automate the personalized 3D",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ORSfIBCJE1XjRbj23HIRhLIC-Ja9e52ilM81cov6xbw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Automate the personalized 3D",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ORSfIBCJE1XjRbj23HIRhLIC-Ja9e52ilM81cov6xbw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Send_Time": "={{ $now }}",
+            "Client_Email": "={{ $json.billing.email }}",
+            "Client_Name": "={{ $json.billing.first_name }} {{ $json.billing.last_name }}",
+            "Status": "Send Form",
+            "Key": "={{ $json.billing.email }}-{{ $json.line_items.map(item=>item.id) }}"
+          },
+          "matchingColumns": [
+            "uniqueKey"
+          ],
+          "schema": [
+            {
+              "id": "Key",
+              "displayName": "Key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Send_Time",
+              "displayName": "Send_Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Client_Email",
+              "displayName": "Client_Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Client_Name",
+              "displayName": "Client_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mode_Generate",
+              "displayName": "Mode_Generate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Note",
+              "displayName": "Note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "19152cca-e9d8-456e-9629-31a6e7e82210",
+      "name": "Track Customer Request",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -1440,
+        1500
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SxUgxWQTbtlDIDK8",
+          "name": "Google Sheets account Hai.retail.online"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "contact@hai-retail.com",
+        "toEmail": "={{ $json.billing.email }}",
+        "subject": "Jouw 3D Action Figure is klaar voor goedkeuring 👀",
+        "html": "=<html>\n  <body style=\"font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;\">\n    <div style=\"background-color: white; max-width: 600px; margin: auto; border-radius: 8px; padding: 30px; box-shadow: 0 0 15px rgba(0,0,0,0.1);\">\n      \n      <h1 style=\"color: #2c3e50; font-size: 28px; margin-bottom: 25px; line-height: 1.3;\">\n        📦 Je Action Figure is klaar voor de laatste check!\n      </h1>\n      \n      <p style=\"font-size: 16px; line-height: 1.6; color: #34495e; margin-bottom: 20px;\">\n        Hier is de preview van jouw actiepoppetje:\n      </p>\n      \n      <div style=\"text-align: center; margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px;\">\n        <img src='{{ $json.line_items[0].image.src }}' style=\"max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);\"/>\n      </div>\n      \n      <div style=\"margin: 35px 0;\">\n        <div style=\"margin-bottom: 15px;\">\n          <a href=\"https://forms.fillout.com/t/t4vWJKjrTpus\" style=\"background-color: #27ae60; color: white; padding: 16px 32px; text-decoration: none; font-size: 16px; font-weight: bold; border-radius: 8px; box-shadow: 0 4px 8px rgba(39,174,96,0.3); display: inline-block; margin-right: 10px;\">\n            ✅ Yes, ik ben enthousiast; printen maar!\n          </a>\n        </div>\n        <div>\n          <a href='{{webhook_reject}}' style=\"background-color: #e67e22; color: white; padding: 16px 32px; text-decoration: none; font-size: 16px; font-weight: bold; border-radius: 8px; box-shadow: 0 4px 8px rgba(230,126,34,0.3); display: inline-block;\">\n            💬 Ik wil nog een kleine aanpassing doorgeven\n          </a>\n        </div>\n      </div>\n      \n      <div style=\"border-top: 2px solid #ecf0f1; padding-top: 25px; margin-top: 30px;\">\n        <p style=\"font-weight: bold; color: #2c3e50; margin-bottom: 20px;\">\n          — Joost & Calvin, team AI Action Figures\n        </p>\n        \n        <p style=\"font-size: 14px; color: #7f8c8d; font-style: italic; border-left: 3px solid #3498db; padding-left: 15px;\">\n          <strong>P.S.</strong> Nog héél even en je staat vereeuwigd in 3D.\n        </p>\n      </div>\n      \n    </div>\n  </body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -1440,
+        1720
+      ],
+      "id": "c0999367-808e-4bb2-b04e-30004937a981",
+      "name": "Send Preview Email",
+      "webhookId": "40e520c5-d807-47cf-aba7-e5139958ad87",
+      "credentials": {
+        "smtp": {
+          "id": "9e2YblfrVjPlRo1Z",
+          "name": "contact@hai-retail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "209686cc-2d42-4b04-8d3f-d5e58aca81d0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1740,
+        1940
+      ],
+      "id": "0daf5d80-b968-4382-8d2e-ea7c1d6bcf36",
+      "name": "Webhook",
+      "webhookId": "209686cc-2d42-4b04-8d3f-d5e58aca81d0"
+    },
+    {
+      "parameters": {
+        "fromEmail": "=team@hai-retail.com",
+        "toEmail": "={{ $json.Client_Email }}",
+        "subject": "=Let's build your badass mini-me 🪖.",
+        "html": "=<html>\n  <body style=\"font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;\">\n    <div style=\"background-color: white; max-width: 600px; margin: auto; border-radius: 8px; padding: 30px; box-shadow: 0 0 15px rgba(0,0,0,0.1);\">\n      \n      <h1 style=\"color: #2c3e50; font-size: 28px; margin-bottom: 25px; line-height: 1.3;\">\n        <strong>Nog één stap tot jouw eigen 3D actiefiguur.</strong>\n      </h1>\n      \n      <p style=\"font-size: 16px; line-height: 1.6; color: #34495e; margin-bottom: 20px;\">\n        Je was nieuwsgierig. Je klikte. En nu sta je op het punt om iets te maken waar mensen nog weken over praten.\n      </p>\n      \n      <div style=\"background-color: #ecf0f1; padding: 20px; border-radius: 6px; margin: 25px 0;\">\n        <p style=\"margin: 0; font-size: 16px; color: #2c3e50;\">\n          <strong>Wat nu?</strong> ➡️ Vul dat formulier in. Kies je outfit en accessoires. En wij maken er een figuur van dat zó vet is, dat je 'm zelf op een sokkel wilt zetten.\n        </p>\n      </div>\n      \n      <div style=\"background-color: #fff3cd; border-left: 4px solid #f39c12; padding: 18px; margin: 25px 0; border-radius: 4px;\">\n        <p style=\"margin: 0; font-weight: bold; color: #856404; font-size: 15px;\">\n          <strong>Let op:</strong> We maken er maar een beperkt aantal per week. Niet omdat we schaarste willen faken. Maar omdat het handwerk is.\n        </p>\n      </div>\n      \n      <div style=\"text-align: center; margin: 35px 0;\">\n        <a href=\"https://forms.fillout.com/t/t4vWJKjrTpus\" target=\"_blank\" style=\"background-color: #27ae60; color: white; padding: 18px 40px; text-decoration: none; font-size: 18px; font-weight: bold; border-radius: 8px; box-shadow: 0 4px 12px rgba(39,174,96,0.3); display: inline-block; transition: all 0.3s;\">\n          <strong>Stel nu je figuur samen</strong>\n        </a>\n      </div>\n      \n      <div style=\"text-align: center; margin: 25px 0;\">\n        <p style=\"color: #7f8c8d; font-size: 14px; margin: 5px 0;\">✅ In 2 minuten geregeld</p>\n        <p style=\"color: #7f8c8d; font-size: 14px; margin: 5px 0;\">✅ Geen kleine lettertjes</p>\n        <p style=\"color: #7f8c8d; font-size: 14px; margin: 5px 0;\">✅ 100% jij (of je collega, partner, super held)</p>\n      </div>\n      \n      <div style=\"border-top: 2px solid #ecf0f1; padding-top: 25px; margin-top: 30px;\">\n        <p style=\"font-size: 15px; color: #34495e; margin-bottom: 15px;\">\n          Heb je vragen? App, bel of mail Calvin. Hij hapt niet, tenzij hij zijn broodje Nutella heeft gemist.\n        </p>\n        \n        <p style=\"font-weight: bold; color: #2c3e50; margin-bottom: 20px;\">\n          Joost, Calvin & Team Hai Action Figures\n        </p>\n        \n        <p style=\"font-size: 14px; color: #7f8c8d; font-style: italic; border-left: 3px solid #3498db; padding-left: 15px;\">\n          <strong>P.S.</strong> Als je dit niet deelt met je vrienden, is dat begrijpelijk. Ze zouden toch alleen maar jaloers zijn.\n        </p>\n      </div>\n      \n    </div>\n  </body>\n</html>",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "=attachment"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -1420,
+        1280
+      ],
+      "id": "ddd4b9a5-d5d5-41f0-8f10-451e1d4581d5",
+      "name": "Send Email",
+      "webhookId": "8f4a7ea5-b425-4940-9bd8-fa772d92f8f2",
+      "credentials": {
+        "smtp": {
+          "id": "9e2YblfrVjPlRo1Z",
+          "name": "contact@hai-retail.com"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "WooCommerce Trigger": {
+      "main": [
+        [
+          {
+            "node": "Track Customer Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Preview Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Track Customer Request": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a42a3b1b-7b7c-42a0-8d52-3ebeb981d75a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6e54678a53d7f49248c5f099ed5a913abc90c7037941e56ed5af77444c54e2c4"
+  },
+  "id": "gv8rZK5NGjsvAgtz",
+  "tags": []
+}

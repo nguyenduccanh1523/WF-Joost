@@ -1,0 +1,238 @@
+{
+  "name": "Test Recruiters",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "name": "Run Daily at 08:30 Amsterdam",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e3e6acdc-9034-4f18-9ee2-8c7e83ecc064"
+    },
+    {
+      "parameters": {},
+      "name": "Scrape Indeed NL via Apify",
+      "type": "n8n-nodes-base.apify",
+      "typeVersion": 1,
+      "position": [
+        200,
+        0
+      ],
+      "id": "53b6ed9d-4c88-4e6e-a82a-d458fb0f77b3",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "name": "Loop Through Each Job",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ],
+      "id": "f824c145-4fc2-4fe3-a93d-c88d8dff128c"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "{{$json.company_name}}",
+              "operation": "notContains",
+              "value2": "Randstad"
+            },
+            {
+              "value1": "{{$json.company_name}}",
+              "operation": "notContains",
+              "value2": "YoungCapital"
+            },
+            {
+              "value1": "{{$json.company_name}}",
+              "operation": "notContains",
+              "value2": "Timing"
+            }
+          ]
+        }
+      },
+      "name": "Filter out Recruiters",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        600,
+        0
+      ],
+      "id": "bf49538e-f375-4ee2-aa83-2759080f924d"
+    },
+    {
+      "parameters": {
+        "url": "https://api.icypeas.com/v2/enrich-person",
+        "options": {}
+      },
+      "name": "Enrich Contact with Icypeas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        800,
+        0
+      ],
+      "id": "93179f93-54f5-4231-9190-8604db0b0851"
+    },
+    {
+      "parameters": {
+        "functionCode": "const item = $json;\n\n// Normalize Phone\nif (item.phone) {\n  item.phone = item.phone.replace(/[^0-9+]/g, '');\n}\n\n// Map Role\nconst role = item.contact_role.toLowerCase();\nconst roleMap = {\n  'owner': 'Owner',\n  'founder': 'Founder',\n  'hr manager': 'HR Manager',\n  'recruiter': 'Recruiter',\n  'operations manager': 'Operations Manager'\n};\nitem.contact_role = Object.keys(roleMap).find(key => role.includes(key)) || 'Other';\n\n// Set created_at timestamp\nitem.created_at = new Date().toISOString();\n\nreturn item;"
+      },
+      "name": "Normalize Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        0
+      ],
+      "id": "fc9a5365-e764-434e-a2bf-04512daf13c3"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "options": {}
+      },
+      "name": "Append to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "87601e37-f5f8-4781-9494-2cd0b874329c"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "{{$items.length}}",
+              "operation": "largerEqual",
+              "value2": 10
+            }
+          ]
+        }
+      },
+      "name": "10+ New Leads?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        0
+      ],
+      "id": "2281bb83-9c24-413a-9231-ea6e7e940066"
+    },
+    {
+      "parameters": {
+        "subject": "New Indeed (food) leads – NL – {{$now.toFormat('yyyy-MM-dd')}} – {{$items.length}} contacts",
+        "html": "<h3>New Leads Summary</h3><p>Total new contacts: {{$items.length}}</p><p>Link to Google Sheet: https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID</p>",
+        "options": {}
+      },
+      "name": "Email Sales Rep",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        0
+      ],
+      "id": "8dba3661-0fd6-4152-8acc-901bc0f7fc05"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Loop Through Each Job": {
+      "main": [
+        [
+          {
+            "node": "Filter out Recruiters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter out Recruiters": {
+      "main": [
+        [
+          {
+            "node": "Enrich Contact with Icypeas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Contact with Icypeas": {
+      "main": [
+        [
+          {
+            "node": "Normalize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Data": {
+      "main": [
+        [
+          {
+            "node": "Append to Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Google Sheet": {
+      "main": [
+        [
+          {
+            "node": "10+ New Leads?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10+ New Leads?": {
+      "main": [
+        [
+          {
+            "node": "Email Sales Rep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cf94893b-899e-4bb1-b995-6725e50438be",
+  "meta": {
+    "instanceId": "6e54678a53d7f49248c5f099ed5a913abc90c7037941e56ed5af77444c54e2c4"
+  },
+  "id": "n9XFVAQOLTgQIazd",
+  "tags": []
+}
