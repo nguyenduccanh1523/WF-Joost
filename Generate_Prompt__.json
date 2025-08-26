@@ -584,6 +584,515 @@
         960
       ],
       "id": "b893aee9-54d9-4010-8ad2-95d4e501ebae"
+<<<<<<< HEAD
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "model": "gpt-image-1",
+        "prompt": "={{ $json.prompt }}",
+        "options": {
+          "quality": "high",
+          "size": "1024x1024"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1008,
+        192
+      ],
+      "id": "c2f55834-859c-43b2-a0a2-78868c0f1d33",
+      "name": "Generate an image",
+      "credentials": {
+        "openAiApi": {
+          "id": "2oY3nw4V0Uspsrzp",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "team@hai-retail.com",
+        "toEmail": "=nguyenduccanh1523@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2880,
+        128
+      ],
+      "id": "e19d9725-7128-44e8-8a7e-0573b6caf93e",
+      "name": "Send email",
+      "webhookId": "8f4a7ea5-b425-4940-9bd8-fa772d92f8f2",
+      "credentials": {
+        "smtp": {
+          "id": "9e2YblfrVjPlRo1Z",
+          "name": "contact@hai-retail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy data từ node trước\nconst inputData = $input.all();\n\nreturn inputData.map(item => ({\n  json: {\n    ...item.json,\n    image_url: item.json.url.replace('www.dropbox.com', 'dl.dropboxusercontent.com').replace('?dl=0', '')\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2064,
+        0
+      ],
+      "id": "37b78db2-4a60-45db-a5a4-6aabbaca93b1",
+      "name": "GetImage"
+    },
+    {
+      "parameters": {
+        "functionCode": "/**\n * Input: items[0].json.referenceImages = { head:[], top:[], jeans:[], shoes:[] }\n * Output: N items (mỗi item = 1 file cần tải), có {url, binary, group, idx, prompt_no_urls}\n *  - binary là tên binary property mong muốn (vd: head0, head1, top0, ...)\n */\nfunction arr(v){ return Array.isArray(v) ? v : (v == null ? [] : [v]); }\n\nconst src = items[0].json;\nconst ref = src.referenceImages || {};\nconst groups = [\"head\", \"top\", \"jeans\", \"shoes\"];\n\nconst out = [];\nfor (const g of groups) {\n  const urls = arr(ref[g]).filter(u => !!u);\n  urls.forEach((url, i) => {\n    out.push({\n      json: {\n        url: String(url),\n        group: g,\n        idx: i,\n        binary: `${g}${i}`,               // tên binary động\n        prompt_no_urls: src.prompt_no_urls // giữ lại để dùng về sau\n      }\n    });\n  });\n}\n\n// Nếu không có file nào, vẫn trả 1 item để khỏi gãy flow\nif (!out.length) {\n  out.push({ json: { url: null, group: 'none', idx: 0, binary: 'none', prompt_no_urls: src.prompt_no_urls }});\n}\n\nreturn out;\n"
+      },
+      "name": "BuildDownloadList",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        576,
+        0
+      ],
+      "id": "5526238d-6050-4ac1-bea3-879e43bf383a"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "file",
+              "outputPropertyName": "=data"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        736,
+        0
+      ],
+      "id": "a7e43a9b-9362-4d26-8c6f-5e5c9319bec1",
+      "name": "Download"
+    },
+    {
+      "parameters": {
+        "functionCode": "/**\n * Pack & Rename (gộp + đổi tên) – dùng 1 node duy nhất\n * Input: nhiều items sau Download\n *  - item.json.binary  = tên mong muốn (vd: \"head0\", \"top0\"...)\n *  - item.json.group   = \"head\" | \"top\" | \"jeans\" | \"shoes\" (tuỳ bạn)\n *  - item.json.idx     = 0..n\n *  - item.binary       = { data: <Buffer> } (khuyến nghị Download để là \"data\")\n *\n * Output: 1 item\n *  - out.binary = { head0:<Buf>, head1:<Buf>, top0:<Buf>, ... }\n *  - out.json.imageBinaryProps = ['head0','head1','top0',...]\n *  - out.json.prompt_no_urls giữ nguyên để gửi OpenAI\n */\n\nfunction uniqueKey(targetBinary, base) {\n  let k = String(base || 'file');\n  let i = 1;\n  while (targetBinary[k]) k = `${base}_${i++}`;\n  return k;\n}\n\nconst imageBinaryProps = [];\nconst out = { json: { imageBinaryProps, prompt_no_urls: null }, binary: {} };\n\nfor (const item of items) {\n  const j = item.json || {};\n  const bin = item.binary || {};\n\n  // Tên mong muốn ưu tiên: json.binary -> group+idx -> giữ nguyên srcKey\n  const desiredFromJson = (typeof j.binary === 'string' && j.binary.trim()) ? j.binary.trim() : null;\n  const desiredFromGroup = (j.group && Number.isInteger(j.idx)) ? `${j.group}${j.idx}` : null;\n\n  for (const srcKey of Object.keys(bin)) {\n    let target = desiredFromJson || desiredFromGroup || srcKey;\n\n    // Tránh đè key nếu trùng\n    if (out.binary[target]) target = uniqueKey(out.binary, target);\n\n    out.binary[target] = bin[srcKey];\n    imageBinaryProps.push(target);\n  }\n\n  // Carry prompt_no_urls cho lần đầu gặp\n  if (!out.json.prompt_no_urls && j.prompt_no_urls) {\n    out.json.prompt_no_urls = j.prompt_no_urls;\n  }\n}\n\nreturn [out];\n"
+      },
+      "name": "PackBinaries",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        896,
+        0
+      ],
+      "id": "768d203f-54cb-4d6a-b048-6f0f0cff8315"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: 1 item có nhiều binary: { head0, head1, top0, ... }\n// Output: N item, mỗi item giữ đúng 1 binary + meta (group, idx, prop)\nconst bin = items[0].binary || {};\nconst out = [];\n\nfunction parseProp(p){\n  const m = String(p).match(/^([a-zA-Z]+)(\\d+)$/);\n  return m ? { group: m[1].toLowerCase(), idx: Number(m[2]) } : { group: 'misc', idx: 0 };\n}\n\nfor (const prop of Object.keys(bin)) {\n  const meta = parseProp(prop);\n  const file = bin[prop];\n  out.push({\n    json: {\n      prop,\n      group: meta.group,\n      idx: meta.idx,\n      filename: file.fileName || `${prop}.${file.fileExtension || 'png'}`\n    },\n    binary: { [prop]: file }\n  });\n}\n\n// Sắp xếp đảm bảo thứ tự: head -> top -> jeans -> shoes -> misc, rồi theo idx\nconst order = { head: 0, top: 1, jeans: 2, shoes: 3 };\nout.sort((a,b) =>\n  (order[a.json.group] ?? 9) - (order[b.json.group] ?? 9) || a.json.idx - b.json.idx\n);\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        -240
+      ],
+      "id": "32ff6c45-da0a-4c15-a008-50ac0dd5aff1",
+      "name": "UnpackBinaries"
+    },
+    {
+      "parameters": {
+        "content": "## Prompt accessori\n\nCreate a full-color, 3D-rendered collectible accessory exactly 3x3 cm in size, optimized for SLA resin 3D printing. The model must be watertight, fully solid, and structurally printable. Do not allow any floating parts, thin overhangs, fragile details, or fine surface texture.\n\nUse a minimalistic and compact style, suitable for small-scale printing — never exaggerated or cartoonish.\n\nThe accessory must exactly match the uploaded reference photo(s) in shape, color, and layout.\n\nAll geometry must be clean, sealed, and fully fused — no loose or fragile elements. Avoid extreme thinness, hanging parts, or unsupported details. Simplify for reliable 3D printing while maintaining recognizability.\n\nRender the final accessory in high resolution, centered on a plain white background with soft drop shadow. Export as a transparent PNG. Do not include a base, stand, or background environment.\n\nCreate a [insert variable]",
+        "height": 464,
+        "width": 544
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -496,
+        -784
+      ],
+      "typeVersion": 1,
+      "id": "ccea3c75-14aa-470a-9f6d-6ce544177439",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/files",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer "
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "purpose",
+              "value": "vision"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "=file",
+              "inputDataFieldName": "={{$json.prop}}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        -272
+      ],
+      "id": "e5d59ccd-4bb2-4dc5-8558-1d9fbc6075fc",
+      "name": "OpenAI Files"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prompt = $('Generate Prompt (Function)').first().json.prompt_no_urls || 'Describe your image here';\nconst fileIds = items.map(it => it.json.id).filter(Boolean);\n\nconst content = [{ type: 'input_text', text: prompt }];\nfor (const id of fileIds) {\n  content.push({\n    type: 'input_image',\n    image_url: `https://api.openai.com/v1/files/${id}/content` // ✅ string, không phải { url: ... }\n  });\n}\n\nreturn [{\n  json: { model: 'gpt-image-1', input: [{ role: 'user', content }] }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        -272
+      ],
+      "id": "3baf6be6-8a9e-466d-ab90-b5296c47aeb6",
+      "name": "Gom-file"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/edits",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer "
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-image-1"
+            },
+            {
+              "name": "prompt",
+              "value": "={{$node[\"Generate Prompt (Function)\"].json[\"prompt_no_urls\"]}}"
+            },
+            {
+              "name": "size",
+              "value": "1024x1536"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image[]",
+              "inputDataFieldName": "={{ $json.imageBinaryProps[0] }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image[]",
+              "inputDataFieldName": "={{ $json.imageBinaryProps[1] }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image[]",
+              "inputDataFieldName": "={{ $json.imageBinaryProps[2] }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image[]",
+              "inputDataFieldName": "={{ $json.imageBinaryProps[3] }}"
+            },
+            {
+              "name": "background",
+              "value": "transparent"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1072,
+        0
+      ],
+      "id": "b1704edf-e174-4e97-940b-6955a603cf95",
+      "name": "OpenAI Generate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Hỗ trợ cả 1 ảnh (data[0]) hoặc đã Split Out (b64_json nằm thẳng)\nreturn items.map((item, i) => {\n  const b64 =\n    item.json?.b64_json ??\n    item.json?.data?.[0]?.b64_json;\n\n  if (!b64) throw new Error('Không tìm thấy b64_json');\n\n  item.binary = item.binary || {};\n  item.binary.image = {\n    data: Buffer.from(b64, 'base64').toString('base64'),\n    fileName: `figure_${i + 1}.png`,\n    mimeType: 'image/png',\n  };\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        0
+      ],
+      "id": "4fbb26a0-9e4b-4ec1-87e6-68f094811a28",
+      "name": "Extract-Base64"
+    },
+    {
+      "parameters": {
+        "path": "=/Action-Figures/{{ $json[\"filename\"] }}",
+        "binaryData": true,
+        "binaryPropertyName": "image"
+      },
+      "type": "n8n-nodes-base.dropbox",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        0
+      ],
+      "id": "30e0a8f2-ed1e-48db-bf27-1199f2e3deea",
+      "name": "Upload a file",
+      "credentials": {
+        "dropboxApi": {
+          "id": "jvckrdLCbXuSncAY",
+          "name": "Dropbox Joost"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const j = items[0].json;\nconst pkg = String(j.packageType || 'Basic').toLowerCase();\n\n// Giới hạn theo gói\nconst limit = pkg === 'pro' ? 2 : (pkg.startsWith('pre') ? 3 : 0);\n\n// Lấy danh sách accessories đã chuẩn hoá từ Generate Prompt\nconst names = (j.accessories || []).slice(0, limit);\n\n// Không có gì => return []\nif (!names.length) return [];\n\nconst base = j.accessory_prompt_base || '';\nconst now = Date.now();\n\nconst out = names.map((name) => ({\n  json: {\n    accessory: name,\n    // prompt đầy đủ cho 1 accessory (chèn value vào dòng cuối cùng)\n    prompt: `${base}\\n\\nCreate a ${name}`,\n    filename: `accessory_${name}_${now}.png`\n  }\n}));\n\nreturn out;\n"
+      },
+      "name": "Prepare Accessories",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        768,
+        192
+      ],
+      "id": "cec8c58a-3535-4148-ac03-d68d6c76932b"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer "
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-image-1"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.prompt }}"
+            },
+            {
+              "name": "size",
+              "value": "1024x1536"
+            },
+            {
+              "name": "background",
+              "value": "transparent"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        528
+      ],
+      "id": "643020d5-6611-43f4-abb5-cc646511ad3b",
+      "name": "OpenAI Generate Accessori"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Content-Type\": \"application/json\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"path\": \"{{ $json[\"path_display\"] }}\",\n  \"settings\": {\n    \"requested_visibility\": \"public\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1664,
+        192
+      ],
+      "id": "c2325092-903e-4c5c-a7f3-2642b9a34f90",
+      "name": "Get Link3",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "iErP8eE0V4l4OiRM",
+          "name": "Bearer Auth Joost Dropbox"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy data từ node trước\nconst inputData = $input.all();\n\nreturn inputData.map(item => ({\n  json: {\n    ...item.json,\n    image_url: item.json.url.replace('www.dropbox.com', 'dl.dropboxusercontent.com').replace('?dl=0', '')\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        192
+      ],
+      "id": "a5976137-53cf-40b5-a15e-1cd8ab321d2e",
+      "name": "GetImage1"
+    },
+    {
+      "parameters": {
+        "path": "=/Action-Figures/Accessories/{{ $json[\"filename\"] }}",
+        "binaryData": true,
+        "binaryPropertyName": "image"
+      },
+      "type": "n8n-nodes-base.dropbox",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        192
+      ],
+      "id": "74261ed8-4fc9-4473-870a-8c38193c631d",
+      "name": "Upload a file1",
+      "credentials": {
+        "dropboxApi": {
+          "id": "jvckrdLCbXuSncAY",
+          "name": "Dropbox Joost"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Input: N item từ \"Generate an image\", mỗi item có binary key (thường là \"data\")\n// Output: N item, binary phải nằm ở key \"image\" + đặt fileName\n\nfunction ts() {\n  return new Date().toISOString().replace(/[-:.TZ]/g, '');\n}\n\nreturn items.map((it, i) => {\n  const bin = it.binary || {};\n  const firstKey = Object.keys(bin)[0];        // vd: \"data\"\n  if (!firstKey) throw new Error(`Item ${i} không có binary`);\n\n  const name =\n    (it.json && it.json.filename) ||\n    `accessory_${it.json?.accessory || (i+1)}_${ts()}.png`;\n\n  return {\n    json: { ...(it.json || {}), filename: name },\n    binary: {\n      image: {\n        ...bin[firstKey],\n        fileName: name,        // bắt buộc để Dropbox lưu đúng tên\n        mimeType: 'image/png'\n      }\n    }\n  };\n});\n"
+      },
+      "name": "Set file for Dropbox (accessories)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        192
+      ],
+      "id": "306dd01f-bff9-45f8-804a-25f664441fa6"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2304,
+        128
+      ],
+      "id": "633b152e-635b-439a-94e9-226f3088b200",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n\n    \".tag\": \"file\",\n    \"url\": \"https://www.dropbox.com/scl/fi/xpgdd55orzg7ycit3ve45/output_20250826070851676.png?rlkey=580brxr0de33bf6moy78j973k&dl=0\",\n    \"id\": \"id:xljGIdC_-pAAAAAAAAAnvg\",\n    \"name\": \"output_20250826070851676.png\",\n    \"path_lower\": \"/action-figures/output_20250826070851676.png\",\n    \"link_permissions\": {\n      \"resolved_visibility\": {\n        \".tag\": \"public\"\n      },\n      \"requested_visibility\": {\n        \".tag\": \"public\"\n      },\n      \"can_revoke\": true,\n      \"effective_audience\": {\n        \".tag\": \"public\"\n      },\n      \"link_access_level\": {\n        \".tag\": \"viewer\"\n      },\n      \"visibility_policies\": [\n        {\n          \"policy\": {\n            \".tag\": \"public\"\n          },\n          \"resolved_policy\": {\n            \".tag\": \"public\"\n          },\n          \"allowed\": true\n        },\n        {\n          \"policy\": {\n            \".tag\": \"team_only\"\n          },\n          \"resolved_policy\": {\n            \".tag\": \"no_one\"\n          },\n          \"allowed\": false,\n          \"disallowed_reason\": {\n            \".tag\": \"user_not_on_team\"\n          }\n        },\n        {\n          \"policy\": {\n            \".tag\": \"password\"\n          },\n          \"resolved_policy\": {\n            \".tag\": \"password\"\n          },\n          \"allowed\": true\n        }\n      ],\n      \"can_set_expiry\": false,\n      \"can_remove_expiry\": true,\n      \"allow_download\": true,\n      \"can_allow_download\": true,\n      \"can_disallow_download\": false,\n      \"allow_comments\": false,\n      \"team_restricts_comments\": false,\n      \"audience_options\": [\n        {\n          \"audience\": {\n            \".tag\": \"public\"\n          },\n          \"allowed\": true\n        },\n        {\n          \"audience\": {\n            \".tag\": \"team\"\n          },\n          \"allowed\": false,\n          \"disallowed_reason\": {\n            \".tag\": \"user_not_on_team\"\n          }\n        },\n        {\n          \"audience\": {\n            \".tag\": \"no_one\"\n          },\n          \"allowed\": true\n        }\n      ],\n      \"can_set_password\": false,\n      \"can_remove_password\": true,\n      \"require_password\": false,\n      \"can_use_extended_sharing_controls\": false\n    },\n    \"preview_type\": \"photo\",\n    \"created_timestamp\": \"2025-08-26T07:08:55Z\",\n    \"client_modified\": \"2025-08-26T07:08:53Z\",\n    \"server_modified\": \"2025-08-26T07:08:54Z\",\n    \"rev\": \"63d3f584def3e00fe24e9\",\n    \"size\": 2761793,\n    \"image_url\": \"https://dl.dropboxusercontent.com/scl/fi/xpgdd55orzg7ycit3ve45/output_20250826070851676.png?rlkey=580brxr0de33bf6moy78j973k&dl=0\"\n\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        400
+      ],
+      "id": "6d544959-8461-4958-b0be-5aaf62bf0478",
+      "name": "GetImage2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      \".tag\": \"file\",\n      \"url\": \"https://www.dropbox.com/scl/fi/95aacscgzmiyk9lsjxl8r/accessory_1_20250826071030230.png?rlkey=azz65txug91nttfg0tbro0n95&dl=0\",\n      \"id\": \"id:xljGIdC_-pAAAAAAAAAnvw\",\n      \"name\": \"accessory_1_20250826071030230.png\",\n      \"path_lower\": \"/action-figures/accessories/accessory_1_20250826071030230.png\",\n      \"size\": 1669843,\n      \"image_url\": \"https://dl.dropboxusercontent.com/scl/fi/95aacscgzmiyk9lsjxl8r/accessory_1_20250826071030230.png?rlkey=azz65txug91nttfg0tbro0n95&dl=0\"\n    }\n  },\n  {\n    json: {\n      \".tag\": \"file\",\n      \"url\": \"https://www.dropbox.com/scl/fi/09sm5feyyz3akkh3kyx3b/accessory_2_20250826071030234.png?rlkey=kln5ra4bnvj3k1dp09bhvyjxj&dl=0\",\n      \"id\": \"id:xljGIdC_-pAAAAAAAAAnwA\",\n      \"name\": \"accessory_2_20250826071030234.png\",\n      \"path_lower\": \"/action-figures/accessories/accessory_2_20250826071030234.png\",\n      \"size\": 1602955,\n      \"image_url\": \"https://dl.dropboxusercontent.com/scl/fi/09sm5feyyz3akkh3kyx3b/accessory_2_20250826071030234.png?rlkey=kln5ra4bnvj3k1dp09bhvyjxj&dl=0\"\n    }\n  }\n]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        592
+      ],
+      "id": "af0a1940-a491-48fe-bf9f-5ed60dcaa97f",
+      "name": "GetImage3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2272,
+        464
+      ],
+      "id": "ebb5a3b9-57b9-446b-a92c-6e128c55a6c4",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Inputs ===\nconst submissionNode = $('Code').first().json; // Payload Fillout/Prompt Builder\n\n// Lấy JSON từ các node trước một cách an toàn\nfunction fromNode(name){\n  try { return $(name).first().json; } catch(e){ return null; }\n}\nconst dropboxShare = fromNode('Get Link') || fromNode('Dropbox') || null; \nconst getImageMeta = fromNode('GetImage') || fromNode('Getimage') || fromNode('Get image') || null;\n\n// === Helpers ===\nfunction toArray(v){ return Array.isArray(v) ? v : (v == null ? [] : [v]); }\nfunction getQuestions(n){ return n?.body?.submission?.questions || n?.submission?.questions || n?.questions || []; }\nfunction qById(qs,id){ return qs.find(q => q.id === id); }\nfunction qVal(qs,id){ const q = qById(qs,id); return q ? q.value : null; }\nfunction normalizeFiles(value){\n  return toArray(value).filter(x => x && typeof x === 'object' && x.url)\n    .map(x => ({ url: String(x.url), filename: x.filename ? String(x.filename) : null }));\n}\nfunction limitAccessories(tier, list){ const map={Basic:0,Pro:2,Premium:3}; return list.filter(Boolean).slice(0,map[tier]??0); }\nfunction esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }\nfunction getEmailFromQuestions(qs){ const c=qs.find(q=>/email/i.test(q.name||'') && typeof q.value==='string'); return c?.value || null; }\nfunction toDropboxDirect(u) {\n  if (!u) return null;\n  try {\n    const url = new URL(u);\n    if (url.hostname.includes('dropbox.com')) {\n      url.hostname = 'dl.dropboxusercontent.com';\n      url.searchParams.delete('dl');\n      url.searchParams.delete('raw');\n      url.searchParams.set('raw','1');\n    }\n    return url.toString();\n  } catch {\n    return u;\n  }\n}\n\n// === Parse submission ===\nconst qs = getQuestions(submissionNode);\nconst ID = { figureMode:'5fDx', head:'qEc1', top:'5dqb', jeans:'snJb', shoes:'pMim', tier:'ihrM', acc1:'fMfk', acc2:'wgTW', acc3:'xA4b' };\nconst figureMode = qVal(qs, ID.figureMode) || 'Eén figuur';\nconst tier       = qVal(qs, ID.tier) || 'Basic';\nconst headFiles  = normalizeFiles(qVal(qs, ID.head));\nconst topFiles   = normalizeFiles(qVal(qs, ID.top));\nconst jeansFiles = normalizeFiles(qVal(qs, ID.jeans));\nconst shoesFiles = normalizeFiles(qVal(qs, ID.shoes));\nconst accRaw     = [(qVal(qs, ID.acc1)||'')?.toString().trim()||null,(qVal(qs, ID.acc2)||'')?.toString().trim()||null,(qVal(qs, ID.acc3)||'')?.toString().trim()||null];\nconst accessories= limitAccessories(tier, accRaw);\n\nconst email = getEmailFromQuestions(qs) || submissionNode?.email || 'user@example.com';\n\n// === Preview sources ===\nconst imageUrlFromGetImage = getImageMeta?.image_url ? String(getImageMeta.image_url) : null;\nconst sharedObjUrl = Array.isArray(dropboxShare) ? dropboxShare[0]?.url : dropboxShare?.url || null;\n\nconst previewLink = imageUrlFromGetImage || sharedObjUrl || 'https://www.dropbox.com/';\nconst directUrl   = imageUrlFromGetImage || (sharedObjUrl ? toDropboxDirect(sharedObjUrl) : null);\n\n// === Approve / Reject (Fillout)\nconst filloutBaseUrl = 'https://fillout.com/form/your-form-id'; // TODO: thay form thực\nconst approveUrl = `${filloutBaseUrl}?email=${encodeURIComponent(email)}&preview=${encodeURIComponent(previewLink)}&status=approve`;\nconst rejectUrl  = `${filloutBaseUrl}?email=${encodeURIComponent(email)}&preview=${encodeURIComponent(previewLink)}&status=disapprove`;\n\n// === Gallery 1 hàng: GIỮ TOÀN BỘ ẢNH KHÁCH\nconst galleryFiles = [...headFiles, ...topFiles, ...jeansFiles, ...shoesFiles];\nconst N = Math.max(1, galleryFiles.length);\nconst colWidth = (100 / N).toFixed(2);\nconst galleryRow = galleryFiles.length ? `\n  <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"margin: 8px 0;\">\n    <tr>\n      ${galleryFiles.map(f => `\n        <td width=\"${colWidth}%\" style=\"padding:3px;\">\n          <a href=\"${esc(f.url)}\" target=\"_blank\" style=\"display:block;\">\n            <img src=\"${esc(f.url)}\" alt=\"ref\" style=\"width:100%; height:96px; object-fit:cover; border-radius:7px; border:1px solid #eaecef;\">\n          </a>\n        </td>`).join('')}\n    </tr>\n  </table>` : '';\n\n// === Badges (thu nhỏ)\nconst accessoriesText = accessories.length ? accessories.join(', ') : (tier === 'Basic' ? 'geen accessoires' : 'n.v.t.');\nconst refsText = `Head(${headFiles.length}) • Top(${topFiles.length}) • Jeans(${jeansFiles.length}) • Shoes(${shoesFiles.length})`;\n\nconst subject = \"📦 Je Action Figure is klaar voor de laatste check!\";\nconst heroSrc = imageUrlFromGetImage || 'cid:preview3d'; // fallback CID nếu không có URL\n\n// === HTML: bỏ nút Preview, badge & ảnh preview thu nhỏ ===\nconst html = `\n<!DOCTYPE html>\n<html>\n  <body style=\"font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 18px;\">\n    <div style=\"background-color: white; max-width: 600px; margin: auto; border-radius: 10px; padding: 26px; box-shadow: 0 0 12px rgba(0,0,0,0.08);\">\n      <h1 style=\"color: #2c3e50; font-size: 26px; margin-bottom: 10px; line-height: 1.3;\">\n        📦 Je Action Figure is klaar voor de laatste check!\n      </h1>\n\n      <!-- Badges (compact) -->\n      <div style=\"margin: 4px 0 14px 0;\">\n        <span style=\"display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;color:#2c3e50;border-radius:999px;padding:4px 8px;font-size:11px;margin-right:6px;\">\n          Pakket: ${esc(tier)}\n        </span>\n        <span style=\"display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;color:#2c3e50;border-radius:999px;padding:4px 8px;font-size:11px;margin-right:6px;\">\n          Accessoires: ${esc(accessoriesText)}\n        </span>\n        <span style=\"display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;color:#2c3e50;border-radius:999px;padding:4px 8px;font-size:11px;\">\n          ${esc(refsText)}\n        </span>\n      </div>\n\n      <p style=\"font-size: 15px; line-height: 1.6; color: #34495e; margin-bottom: 10px;\">\n        Hier is de preview van jouw actiepoppetje:\n      </p>\n\n      <!-- Preview image (compact) -->\n      <div style=\"text-align: center; margin: 10px 0 8px; padding: 12px; background-color: #f8f9fa; border-radius: 8px;\">\n        <img src=\"${esc(heroSrc)}\" alt=\"3D Preview\" style=\"max-width: 88%; height: auto; border-radius: 8px; box-shadow: 0 3px 6px rgba(0,0,0,0.08);\" />\n      </div>\n\n      <!-- Gallery 1 hàng (giữ nguyên mọi ảnh khách) -->\n      <div style=\"margin: 8px 0 16px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;\">\n        ${galleryRow}\n      </div>\n\n      <p style=\"font-size: 15px; line-height: 1.6; color: #34495e; margin-bottom: 12px;\">\n        Nu is het aan jou: ziet het eruit zoals je in gedachten had?\n      </p>\n\n      <div style=\"margin: 8px 0 4px;\">\n        <a href='${esc(approveUrl)}'\n           style=\"background-color: #27ae60; color: white; padding: 14px 18px; text-decoration: none; font-size: 15px; font-weight: bold; border-radius: 8px; box-shadow: 0 3px 7px rgba(39,174,96,0.25); display: inline-block; margin-right: 8px;\">\n          ✅ Ziet er top uit – maak 'm maar!\n        </a>\n        <a href='${esc(rejectUrl)}'\n           style=\"background-color: #e67e22; color: white; padding: 14px 18px; text-decoration: none; font-size: 15px; font-weight: bold; border-radius: 8px; box-shadow: 0 3px 7px rgba(230,126,34,0.25); display: inline-block;\">\n          💬 Ik wil nog een kleine aanpassing doorgeven\n        </a>\n      </div>\n\n      <div style=\"background:#e7f6ec;border:1px solid #bbf7d0;color:#065f46;border-radius:8px;padding:10px 12px;margin-top:14px;font-size:12.5px;\">\n        We gaan pas printen als jij tevreden bent. Dus laat het ons even weten.\n      </div>\n\n      <hr style=\"border:none;border-top:1px solid #ecf0f1;margin:18px 0 12px;\" />\n      <div>\n        <p style=\"font-weight: bold; color: #2c3e50; margin-bottom: 6px;\">— Team SuperFiguur</p>\n        <p style=\"font-size: 13px; color: #7f8c8d; font-style: italic; border-left: 3px solid #3498db; padding-left: 12px; margin: 0;\">\n          <strong>P.S.</strong> Nog héél even en je staat vereeuwigd in 3D.\n        </p>\n      </div>\n    </div>\n  </body>\n</html>\n`;\n\n// === Output ===\nreturn {\n  json: {\n    to: email,\n    subject,\n    html,\n    preview_url: previewLink,          // vẫn xuất nếu bạn cần\n    direct_preview_url: directUrl,     // dùng để tải binary nếu gửi inline CID\n    hero_src: heroSrc,\n    tier, figureMode, accessories\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2496,
+        464
+      ],
+      "id": "54eda77d-97af-44c3-98e1-d2594284af7b",
+      "name": "Code Formart HTML to send Email1"
+=======
+>>>>>>> parent of 32499d8 (ưpdate wf)
     }
   ],
   "pinData": {},
